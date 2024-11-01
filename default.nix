@@ -52,9 +52,8 @@ pkgs.stdenvNoCC.mkDerivation rec {
       runHook preInstall
 
       find "$out" -type f \
-        \( -name \*.lastUpdated -or \
-           -name resolver-status.properties -or \
-           -name _remote.repositories \) \
+        \( -not \( -name "*.pom" -o -name "*.jar" -o -name "*.sha1" -o -name "*.nbm" \) \
+            -o -name "maven-metadata*" \) \
         -delete
 
       runHook postInstall
@@ -64,7 +63,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
     dontConfigure = true;
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
-    outputHash = "sha256-TYZP4XhM3ExLNC3H/QLch6LMVQxbR1LECwubMZn+RXY=";
+    outputHash = "sha256-LJQfV426han/+H9ejUla7JvN1LS/c9l3e7hODs4Z7Kg=";
   };
 
   jre-minimal = pkgs.callPackage (import "${sources.nixpkgs}/pkgs/development/compilers/openjdk/jre.nix") {

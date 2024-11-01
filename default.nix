@@ -66,6 +66,8 @@ pkgs.stdenvNoCC.mkDerivation rec {
     outputHash = "sha256-LJQfV426han/+H9ejUla7JvN1LS/c9l3e7hODs4Z7Kg=";
   };
 
+  outputs = ["out" "maven"];
+
   jre-minimal = pkgs.callPackage (import "${sources.nixpkgs}/pkgs/development/compilers/openjdk/jre.nix") {
     modules = ["java.base" "java.desktop"];
   };
@@ -119,6 +121,16 @@ pkgs.stdenvNoCC.mkDerivation rec {
       ''
       else ""
     }
+
+    cp -r "$mavenRepo" "$maven"
+    chmod u+w -R "$maven"
+    mvn --offline -Dmaven.repo.local="$maven" -Dmaven.test.skip=true install
+
+    # keep only *.{pom,jar,sha1,nbm} and delete all ephemeral files with lastModified timestamps inside
+    find "$maven" -type f \
+      \( -not \( -name "*.pom" -o -name "*.jar" -o -name "*.sha1" -o -name "*.nbm" \) \
+          -o -name "maven-metadata*" \) \
+      -delete
 
     runHook postInstall
   '';

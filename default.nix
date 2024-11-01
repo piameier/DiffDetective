@@ -40,16 +40,24 @@ pkgs.stdenvNoCC.mkDerivation rec {
     nativeBuildInputs = with pkgs; [maven];
 
     buildPhase = ''
+      runHook preBuild
+
       mvn org.apache.maven.plugins:maven-dependency-plugin:3.6.0:go-offline -Dmaven.repo.local="$out"
+
+      runHook postBuild
     '';
 
     # keep only *.{pom,jar,sha1,nbm} and delete all ephemeral files with lastModified timestamps inside
     installPhase = ''
+      runHook preInstall
+
       find "$out" -type f \
         \( -name \*.lastUpdated -or \
            -name resolver-status.properties -or \
            -name _remote.repositories \) \
         -delete
+
+      runHook postInstall
     '';
 
     dontFixup = true;
@@ -88,7 +96,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
 
   inherit doCheck;
   checkPhase = ''
-    runHook postTest
+    runHook preTest
 
     mvn --offline -Dmaven.repo.local="$mavenRepo" test
 
@@ -96,7 +104,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
   '';
 
   installPhase = ''
-    runHook postInstall
+    runHook preInstall
 
     local jar="$out/share/java/DiffDetective/DiffDetective.jar"
     install -Dm644 "target/diffdetective-${version}-jar-with-dependencies.jar" "$jar"

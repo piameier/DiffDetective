@@ -9,6 +9,7 @@
     },
   doCheck ? true,
   buildGitHubPages ? true,
+  dependenciesHash ? "sha256-LJQfV426han/+H9ejUla7JvN1LS/c9l3e7hODs4Z7Kg=",
 }:
 pkgs.stdenvNoCC.mkDerivation rec {
   pname = "DiffDetective";
@@ -63,7 +64,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
     dontConfigure = true;
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
-    outputHash = "sha256-LJQfV426han/+H9ejUla7JvN1LS/c9l3e7hODs4Z7Kg=";
+    outputHash = dependenciesHash;
   };
 
   outputs = ["out" "maven"];

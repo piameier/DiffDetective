@@ -9,6 +9,7 @@
     },
   doCheck ? true,
   buildGitHubPages ? true,
+  dependenciesHash ? "sha256-LJQfV426han/+H9ejUla7JvN1LS/c9l3e7hODs4Z7Kg=",
 }:
 pkgs.stdenvNoCC.mkDerivation rec {
   pname = "DiffDetective";
@@ -32,6 +33,9 @@ pkgs.stdenvNoCC.mkDerivation rec {
     jekyll-theme-cayman
   ]));
 
+  # Maven needs to download necessary dependencies which is impure because it
+  # requires network access. Hence, we download all dependencies as a
+  # fixed-output derivation. This also serves as a nice cache.
   mavenRepo = pkgs.stdenv.mkDerivation {
     pname = "${pname}-mavenRepo";
     inherit version;
@@ -40,24 +44,37 @@ pkgs.stdenvNoCC.mkDerivation rec {
     nativeBuildInputs = with pkgs; [maven];
 
     buildPhase = ''
+      runHook preBuild
+
       mvn org.apache.maven.plugins:maven-dependency-plugin:3.6.0:go-offline -Dmaven.repo.local="$out"
+
+      runHook postBuild
     '';
 
     # keep only *.{pom,jar,sha1,nbm} and delete all ephemeral files with lastModified timestamps inside
     installPhase = ''
+      runHook preInstall
+
       find "$out" -type f \
-        \( -name \*.lastUpdated -or \
-           -name resolver-status.properties -or \
-           -name _remote.repositories \) \
+        \( -not \( -name "*.pom" -o -name "*.jar" -o -name "*.sha1" -o -name "*.nbm" \) \
+            -o -name "maven-metadata*" \) \
         -delete
+
+      runHook postInstall
     '';
 
     dontFixup = true;
     dontConfigure = true;
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
-    outputHash = "sha256-TYZP4XhM3ExLNC3H/QLch6LMVQxbR1LECwubMZn+RXY=";
+    outputHash = dependenciesHash;
   };
+
+  # - `out` contains jars, an executable wrapper and optionally documentation
+  #   (see `buildGitHubPages`)
+  # - `maven` contains a local maven repository with DiffDetective and all its
+  #   build-time and run-time dependencies.
+  outputs = ["out" "maven"];
 
   jre-minimal = pkgs.callPackage (import "${sources.nixpkgs}/pkgs/development/compilers/openjdk/jre.nix") {
     modules = ["java.base" "java.desktop"];
@@ -88,7 +105,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
 
   inherit doCheck;
   checkPhase = ''
-    runHook postTest
+    runHook preTest
 
     mvn --offline -Dmaven.repo.local="$mavenRepo" test
 
@@ -96,13 +113,16 @@ pkgs.stdenvNoCC.mkDerivation rec {
   '';
 
   installPhase = ''
-    runHook postInstall
+    runHook preInstall
 
+    # install jars in "$out"
+    install -Dm644 "target/diffdetective-${version}.jar" "$out/share/java/DiffDetective.jar"
     local jar="$out/share/java/DiffDetective/DiffDetective.jar"
     install -Dm644 "target/diffdetective-${version}-jar-with-dependencies.jar" "$jar"
     makeWrapper "${jre-minimal}/bin/java" "$out/bin/DiffDetective" --add-flags "-cp \"$jar\"" \
       --prefix PATH : "${pkgs.graphviz}/bin"
 
+    # install documentation in "$out"
     ${
       if buildGitHubPages
       then ''
@@ -111,6 +131,17 @@ pkgs.stdenvNoCC.mkDerivation rec {
       ''
       else ""
     }
+
+    # install DiffDetective in "$maven" by creating a copy of "$mavenRepo" as base
+    cp -r "$mavenRepo" "$maven"
+    chmod u+w -R "$maven"
+    mvn --offline -Dmaven.repo.local="$maven" -Dmaven.test.skip=true install
+
+    # keep only *.{pom,jar,sha1,nbm} and delete all ephemeral files with lastModified timestamps inside
+    find "$maven" -type f \
+      \( -not \( -name "*.pom" -o -name "*.jar" -o -name "*.sha1" -o -name "*.nbm" \) \
+          -o -name "maven-metadata*" \) \
+      -delete
 
     runHook postInstall
   '';

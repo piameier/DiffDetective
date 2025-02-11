@@ -102,15 +102,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
     //    ;
     @Override
     public StringBuilder visitNamespaceExpression(CExpressionParser.NamespaceExpressionContext ctx) {
-        if (ctx.primaryExpression().size() > 1) {
-            // primaryExpression (('*'|'/'|'%') primaryExpression)+
-            // We have to abstract the arithmetic expression if there is more than one operand
-            return ctx.accept(abstractingVisitor);
-        } else {
-            // primaryExpression
-            // There is exactly one child expression
-            return ctx.primaryExpression(0).accept(this);
-        }
+        return recurseOnSingleChild(ctx);
     }
 
     // multiplicativeExpression
@@ -118,15 +110,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
     //    ;
     @Override
     public StringBuilder visitMultiplicativeExpression(CExpressionParser.MultiplicativeExpressionContext ctx) {
-        if (ctx.namespaceExpression().size() > 1) {
-            // primaryExpression (('*'|'/'|'%') primaryExpression)+
-            // We have to abstract the arithmetic expression if there is more than one operand
-            return ctx.accept(abstractingVisitor);
-        } else {
-            // primaryExpression
-            // There is exactly one child expression
-            return ctx.namespaceExpression(0).accept(this);
-        }
+        return recurseOnSingleChild(ctx);
     }
 
     // additiveExpression
@@ -134,15 +118,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
     //    ;
     @Override
     public StringBuilder visitAdditiveExpression(CExpressionParser.AdditiveExpressionContext ctx) {
-        if (ctx.multiplicativeExpression().size() > 1) {
-            // multiplicativeExpression (('+'|'-') multiplicativeExpression)+
-            // We have to abstract the arithmetic expression if there is more than one operand
-            return ctx.accept(abstractingVisitor);
-        } else {
-            // multiplicativeExpression
-            // There is exactly one child expression
-            return ctx.multiplicativeExpression(0).accept(this);
-        }
+        return recurseOnSingleChild(ctx);
     }
 
     // shiftExpression
@@ -150,15 +126,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
     //    ;
     @Override
     public StringBuilder visitShiftExpression(CExpressionParser.ShiftExpressionContext ctx) {
-        if (ctx.additiveExpression().size() > 1) {
-            // additiveExpression (('<<'|'>>') additiveExpression)+
-            // We have to abstract the shift expression if there is more than one operand
-            return ctx.accept(abstractingVisitor);
-        } else {
-            // additiveExpression
-            // There is exactly one child expression
-            return ctx.additiveExpression(0).accept(this);
-        }
+        return recurseOnSingleChild(ctx);
     }
 
     // relationalExpression
@@ -166,15 +134,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
     //    ;
     @Override
     public StringBuilder visitRelationalExpression(CExpressionParser.RelationalExpressionContext ctx) {
-        if (ctx.shiftExpression().size() > 1) {
-            // shiftExpression (('<'|'>'|'<='|'>=') shiftExpression)+
-            // We have to abstract the relational expression if there is more than one operand
-            return ctx.accept(abstractingVisitor);
-        } else {
-            // shiftExpression
-            // There is exactly one child expression
-            return ctx.shiftExpression(0).accept(this);
-        }
+        return recurseOnSingleChild(ctx);
     }
 
     // equalityExpression
@@ -182,15 +142,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
     //    ;
     @Override
     public StringBuilder visitEqualityExpression(CExpressionParser.EqualityExpressionContext ctx) {
-        if (ctx.relationalExpression().size() > 1) {
-            // relationalExpression (('=='| '!=') relationalExpression)+
-            // We have to abstract the equality expression if there is more than one operand
-            return ctx.accept(abstractingVisitor);
-        } else {
-            // relationalExpression
-            // There is exactly one child expression
-            return ctx.relationalExpression(0).accept(this);
-        }
+        return recurseOnSingleChild(ctx);
     }
 
     // specialOperator
@@ -268,13 +220,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
     //    ;
     @Override
     public StringBuilder visitExpression(CExpressionParser.ExpressionContext ctx) {
-        if (ctx.assignmentExpression().size() > 1) {
-            // assignmentExpression (',' assignmentExpression)+
-            return ctx.accept(abstractingVisitor);
-        } else {
-            // assignmentExpression
-            return ctx.assignmentExpression(0).accept(this);
-        }
+        return recurseOnSingleChild(ctx);
     }
 
     // andExpression
@@ -282,15 +228,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
     //    ;
     @Override
     public StringBuilder visitAndExpression(CExpressionParser.AndExpressionContext ctx) {
-        if (ctx.equalityExpression().size() > 1) {
-            // equalityExpression ( '&' equalityExpression)+
-            // We have to abstract the 'and' expression if there is more than one operand
-            return ctx.accept(abstractingVisitor);
-        } else {
-            // equalityExpression
-            // There is exactly one child expression
-            return ctx.equalityExpression(0).accept(this);
-        }
+        return recurseOnSingleChild(ctx);
     }
 
     // exclusiveOrExpression
@@ -298,15 +236,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
     //    ;
     @Override
     public StringBuilder visitExclusiveOrExpression(CExpressionParser.ExclusiveOrExpressionContext ctx) {
-        if (ctx.andExpression().size() > 1) {
-            // andExpression ('^' andExpression)+
-            // We have to abstract the xor expression if there is more than one operand
-            return ctx.accept(abstractingVisitor);
-        } else {
-            // andExpression
-            // There is exactly one child expression
-            return ctx.andExpression(0).accept(this);
-        }
+        return recurseOnSingleChild(ctx);
     }
 
     // inclusiveOrExpression
@@ -314,15 +244,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
     //    ;
     @Override
     public StringBuilder visitInclusiveOrExpression(CExpressionParser.InclusiveOrExpressionContext ctx) {
-        if (ctx.exclusiveOrExpression().size() > 1) {
-            // exclusiveOrExpression ('|' exclusiveOrExpression)+
-            // We have to abstract the 'or' expression if there is more than one operand
-            return ctx.accept(abstractingVisitor);
-        } else {
-            // exclusiveOrExpression
-            // There is exactly one child expression
-            return ctx.exclusiveOrExpression(0).accept(this);
-        }
+        return recurseOnSingleChild(ctx);
     }
 
     // logicalAndExpression
@@ -364,5 +286,15 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Stri
             }
         }
         return sb;
+    }
+
+    private StringBuilder recurseOnSingleChild(ParserRuleContext ctx) {
+        if (ctx.getChildCount() > 1) {
+            // We have to abstract the expression if there is more than one operand
+            return ctx.accept(abstractingVisitor);
+        } else {
+            // There is exactly one child expression so we recurse
+            return ctx.getChild(0).accept(this);
+        }
     }
 }

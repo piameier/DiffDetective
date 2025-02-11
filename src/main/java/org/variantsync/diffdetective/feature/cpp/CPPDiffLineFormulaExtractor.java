@@ -2,6 +2,8 @@ package org.variantsync.diffdetective.feature.cpp;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.prop4j.Node;
+import org.prop4j.Not;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
 import org.variantsync.diffdetective.feature.AbstractingFormulaExtractor;
 import org.variantsync.diffdetective.feature.ParseErrorListener;
@@ -36,14 +38,14 @@ public class CPPDiffLineFormulaExtractor extends AbstractingFormulaExtractor {
      * @return The feature mapping as a String of the given line
      */
     @Override
-    public String extractFormula(final String line) throws UnparseableFormulaException {
+    public Node extractFormula(final String line) throws UnparseableFormulaException {
         // Delegate the formula extraction to AbstractingFormulaExtractor
-        String fm = super.extractFormula(line);
+        Node fm = super.extractFormula(line);
 
         // negate for ifndef
         final Matcher matcher = CPP_ANNOTATION_PATTERN.matcher(line);
         if (matcher.find() && "ifndef".equals(matcher.group(1))) {
-            fm = "!(" + fm + ")";
+            fm = new Not(fm);
         }
 
         return fm;

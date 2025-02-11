@@ -3,7 +3,6 @@ package org.variantsync.diffdetective.datasets.predefined;
 import org.variantsync.diffdetective.datasets.PatchDiffParseOptions;
 import org.variantsync.diffdetective.datasets.Repository;
 import org.variantsync.diffdetective.feature.PreprocessorAnnotationParser;
-import org.variantsync.diffdetective.feature.PropositionalFormulaParser;
 
 import java.nio.file.Path;
 
@@ -15,7 +14,6 @@ import java.nio.file.Path;
 public class Marlin {
     public static final PreprocessorAnnotationParser ANNOTATION_PARSER =
             PreprocessorAnnotationParser.CreateCppAnnotationParser(
-                    PropositionalFormulaParser.Default,
                     new MarlinCPPDiffLineFormulaExtractor()
             );
 

@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  */
 public class CPPDiffLineFormulaExtractor extends AbstractingFormulaExtractor {
     // ^[+-]?\s*#\s*(if|ifdef|ifndef|elif)(\s+(.*)|\((.*)\))$
-    private static final String CPP_ANNOTATION_REGEX = "^[+-]?\\s*#\\s*(if|ifdef|ifndef|elif)(\\s+(.*)|(\\(.*\\)))$";
+    private static final String CPP_ANNOTATION_REGEX = "^[+-]?\\s*#\\s*(if|ifdef|ifndef|elif)([\\s(].*)$";
     private static final Pattern CPP_ANNOTATION_PATTERN = Pattern.compile(CPP_ANNOTATION_REGEX);
 
     public CPPDiffLineFormulaExtractor() {

@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
  * @author Alexander Schultheiß
  */
 public class JPPDiffLineFormulaExtractor extends AbstractingFormulaExtractor {
-    private static final String JPP_ANNOTATION_REGEX = "^[+-]?\\s*//\\s*#\\s*(if|elif)(\\s+(.*)|(\\(.*\\)))$";
+    private static final String JPP_ANNOTATION_REGEX = "^[+-]?\\s*//\\s*#\\s*(if|elif)([\\s(].*)$";
     private static final Pattern JPP_ANNOTATION_PATTERN = Pattern.compile(JPP_ANNOTATION_REGEX);
 
     public JPPDiffLineFormulaExtractor() {

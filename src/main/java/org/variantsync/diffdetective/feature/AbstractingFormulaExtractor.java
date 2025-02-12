@@ -44,21 +44,14 @@ public abstract class AbstractingFormulaExtractor implements DiffLineFormulaExtr
     public Node extractFormula(final String text) throws UnparseableFormulaException {
         final Matcher matcher = annotationPattern.matcher(text);
 
-        // Retrieve the formula from the macro line
-        String fm;
-        if (matcher.find()) {
-            if (matcher.group(3) != null) {
-                fm = matcher.group(3);
-            } else {
-                fm = matcher.group(4);
-            }
-        } else {
+        // Match the formula from the macro line
+        if (!matcher.find()) {
             throw new UnparseableFormulaException("Could not extract formula from line \"" + text + "\".");
         }
 
         // abstract complex formulas (e.g., if they contain arithmetics or macro calls)
         try {
-            return abstractFormula(fm);
+            return abstractFormula(matcher.group(2));
         } catch (UncheckedUnParseableFormulaException e) {
             throw e.inner();
         } catch (Exception e) {

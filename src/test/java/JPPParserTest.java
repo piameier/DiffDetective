@@ -41,32 +41,35 @@ public class JPPParserTest {
                 /// #if expression
                 // expression := <operand> <operator> <operand> | [!]defined(name)
                 // expression := operand == operand
-                new JPPParserTest.TestCase<>("//#if 1 == -42", new Literal("1__EQ____U_MINUS__42")),
+                new JPPParserTest.TestCase<>("//#if 1 == -42", new Literal("1==-42")),
                 // expression := operand != operand
-                new JPPParserTest.TestCase<>("// #if 1 != 0", new Literal("1__NEQ__0")),
+                new JPPParserTest.TestCase<>("// #if 1 != 0", new Literal("1!=0")),
                 // expression := operand <= operand
-                new JPPParserTest.TestCase<>("//#if -1 <= 0", new Literal("__U_MINUS__1__LEQ__0")),
+                new JPPParserTest.TestCase<>("//#if -1 <= 0", new Literal("-1<=0")),
                 // expression := operand < operand
-                new JPPParserTest.TestCase<>("//#if \"str\" < 0", new Literal("__QUOTE__str__QUOTE____LT__0")),
+                new JPPParserTest.TestCase<>("//#if \"str\" < 0", new Literal("\"str\"<0")),
                 // expression := operand >= operand
-                new JPPParserTest.TestCase<>("//   #if \"str\" >= \"str\"", new Literal("__QUOTE__str__QUOTE____GEQ____QUOTE__str__QUOTE__")),
+                new JPPParserTest.TestCase<>("//   #if \"str\" >= \"str\"", new Literal("\"str\">=\"str\"")),
                 // expression := operand > operand
-                new JPPParserTest.TestCase<>("//  #if 1.2 > 0", new Literal("1__DOT__2__GT__0")),
+                new JPPParserTest.TestCase<>("//  #if 1.2 > 0", new Literal("1.2>0")),
                 // expression := defined(name)
-                new JPPParserTest.TestCase<>("//#if defined(property)", new Literal("DEFINED_property")),
+                new JPPParserTest.TestCase<>("//#if defined(property)", new Literal("defined(property)")),
                 // expression := !defined(name)
-                new JPPParserTest.TestCase<>("//#if !defined(property)", new Literal("__U_NOT__DEFINED_property")),
+                new JPPParserTest.TestCase<>("//#if !defined(property)", new Literal("defined(property)", false)),
                 // operand := ${property}
-                new JPPParserTest.TestCase<>("//#if ${os_version} == 4.1", new Literal("os_version__EQ__4__DOT__1")),
+                new JPPParserTest.TestCase<>("//#if ${os_version} == 4.1", new Literal("${os_version}==4.1")),
 
                 /// #if expression and expression
-                new JPPParserTest.TestCase<>("//#if 1 > 2 and defined( FEAT_A  )", new And(new Literal("1__GT__2"), new Literal("DEFINED_FEAT_A"))),
+                new JPPParserTest.TestCase<>("//#if 1 > 2 and defined( FEAT_A  )", new And(new Literal("1>2"), new Literal("defined(FEAT_A)"))),
 
                 /// #if expression or expression
-                new JPPParserTest.TestCase<>("//#if !defined(left) or defined(right)", new Or(new Literal("__U_NOT__DEFINED_left"), new Literal("DEFINED_right"))),
+                new JPPParserTest.TestCase<>("//#if !defined(left) or defined(right)", new Or(new Literal("defined(left)", false), new Literal("defined(right)"))),
 
                 /// #if expression and expression or expression
-                new JPPParserTest.TestCase<>("//#if ${os_version} == 4.1 and 1 > -42 or defined(ALL)", new Or(new And(new Literal("os_version__EQ__4__DOT__1"), new Literal("1__GT____U_MINUS__42")), new Literal("DEFINED_ALL")))
+                new JPPParserTest.TestCase<>("//#if ${os_version} == 4.1 and 1 > -42 or defined(ALL)", new Or(new And(new Literal("${os_version}==4.1"), new Literal("1>-42")), new Literal("defined(ALL)"))),
+
+                /// #if "string with whitespace"
+                new JPPParserTest.TestCase<>("//#if ${ test } == \"a b\"", new Literal("${test}==\"a b\""))
         );
     }
 

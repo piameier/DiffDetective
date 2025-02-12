@@ -1,14 +1,10 @@
 package org.variantsync.diffdetective.feature;
 
-import org.prop4j.Literal;
 import org.prop4j.Node;
-import org.prop4j.NodeReader;
 import org.tinylog.Logger;
 import org.variantsync.diffdetective.error.UncheckedUnParseableFormulaException;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
-import org.variantsync.diffdetective.util.fide.FixTrueFalse;
 
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,8 +43,6 @@ public abstract class AbstractingFormulaExtractor implements DiffLineFormulaExtr
     @Override
     public Node extractFormula(final String text) throws UnparseableFormulaException {
         final Matcher matcher = annotationPattern.matcher(text);
-        final Supplier<UnparseableFormulaException> couldNotExtractFormula = () ->
-                new UnparseableFormulaException("Could not extract formula from line \"" + text + "\".");
 
         // Retrieve the formula from the macro line
         String fm;
@@ -59,50 +53,18 @@ public abstract class AbstractingFormulaExtractor implements DiffLineFormulaExtr
                 fm = matcher.group(4);
             }
         } else {
-            throw couldNotExtractFormula.get();
+            throw new UnparseableFormulaException("Could not extract formula from line \"" + text + "\".");
         }
 
         // abstract complex formulas (e.g., if they contain arithmetics or macro calls)
         try {
-            fm = abstractFormula(fm);
+            return abstractFormula(fm);
         } catch (UncheckedUnParseableFormulaException e) {
             throw e.inner();
         } catch (Exception e) {
             Logger.warn(e);
             throw new UnparseableFormulaException(e);
         }
-
-        if (fm.isEmpty()) {
-            throw couldNotExtractFormula.get();
-        }
-
-        return parseFormula(fm);
-    }
-
-    /**
-     * Parser that uses the {@link NodeReader} from FeatureIDE and uses its
-     * {@link NodeReader#activateJavaSymbols() java symbols} to match operators.
-     */
-    protected Node parseFormula(String text) {
-        final NodeReader nodeReader = new NodeReader();
-        nodeReader.activateJavaSymbols();
-
-        Node node = nodeReader.stringToNode(text);
-
-        // if parsing succeeded
-        if (node != null) {
-            // TODO: Is this our desired behaviour?
-            //       If so, should we document it by not using get here
-            //       and instead keeping the witness that this call happened?
-            node = FixTrueFalse.EliminateTrueAndFalseInplace(node).get();
-        }
-
-        if (node == null) {
-//            Logger.warn("Could not parse expression '{}' to feature mapping. Usin>
-            node = new Literal(text);
-        }
-
-        return node;
     }
 
     /**
@@ -113,5 +75,5 @@ public abstract class AbstractingFormulaExtractor implements DiffLineFormulaExtr
      * @param formula that is to be abstracted
      * @return the abstracted formula
      */
-    protected abstract String abstractFormula(String formula);
+    protected abstract Node abstractFormula(String formula);
 }

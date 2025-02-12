@@ -3,6 +3,7 @@ package org.variantsync.diffdetective.feature.jpp;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.prop4j.Node;
 import org.variantsync.diffdetective.feature.AbstractingFormulaExtractor;
 import org.variantsync.diffdetective.feature.ParseErrorListener;
 import org.variantsync.diffdetective.feature.antlr.JPPExpressionLexer;
@@ -11,8 +12,9 @@ import org.variantsync.diffdetective.feature.antlr.JPPExpressionParser;
 import java.util.regex.Pattern;
 
 /**
- * Extracts the expression from a <a href="https://www.slashdev.ca/javapp/">JavaPP (Java PreProcessor)</a> statement .
- * For example, given the annotation "//#if defined(A) || B()", the extractor would extract "DEFINED_A || B".
+ * Extracts the expression from a <a href="https://www.slashdev.ca/javapp/">JavaPP (Java PreProcessor)</a> statement.
+ * For example, given the annotation {@code //#if defined(A) || B()}, the extractor would extract
+ * {@code new Or(new Literal("defined(A)"), new Literal("B()"))}.
  * The extractor detects if and elif annotations (other annotations do not have expressions).
  * The given JPP statement might also be a line in a diff (i.e., preceeded by a - or +).
  *
@@ -29,7 +31,7 @@ public class JPPDiffLineFormulaExtractor extends AbstractingFormulaExtractor {
     /**
      * Abstract the given formula.
      * <p>
-     * First, the visitor uses ANTLR to parse the formula into a parse tree gives the tree to a {@link AbstractingJPPExpressionVisitor}.
+     * First, the formula is parsed using ANTLR and then transformed using {@link ControllingJPPExpressionVisitor}.
      * The visitor traverses the tree starting from the root, searching for subtrees that must be abstracted.
      * If such a subtree is found, the visitor abstracts the part of the formula in the subtree.
      * </p>
@@ -38,12 +40,12 @@ public class JPPDiffLineFormulaExtractor extends AbstractingFormulaExtractor {
      * @return the abstracted formula
      */
     @Override
-    protected String abstractFormula(String formula) {
+    protected Node abstractFormula(String formula) {
         JPPExpressionLexer lexer = new JPPExpressionLexer(CharStreams.fromString(formula));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         JPPExpressionParser parser = new JPPExpressionParser(tokens);
         parser.addErrorListener(new ParseErrorListener(formula));
         ParseTree tree = parser.expression();
-        return tree.accept(new AbstractingJPPExpressionVisitor()).toString();
+        return tree.accept(new ControllingJPPExpressionVisitor());
     }
 }

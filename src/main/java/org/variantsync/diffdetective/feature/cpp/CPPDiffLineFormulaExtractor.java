@@ -15,10 +15,10 @@ import java.util.regex.Pattern;
 
 /**
  * Extracts the expression from a C preprocessor statement.
- * For example, given the annotation "#if defined(A) || B()", the extractor would extract
- * "A || B". The extractor detects if, ifdef, ifndef and elif annotations.
- * (Other annotations do not have expressions.)
- * The given pre-processor statement might also a line in a diff (i.e., preceeded by a - or +).
+ * For example, given the annotation {@code "#if defined(A) || B()"}, the extractor would extract
+ * {@code new Or(new Literal("A"), new Literal("B"))}. The extractor detects if, ifdef, ifndef and
+ * elif annotations. (Other annotations do not have expressions.)
+ * The given pre-processor statement might also be a line in a diff (i.e., preceeded by a - or +).
  *
  * @author Paul Bittner, Sören Viegener, Benjamin Moosherr, Alexander Schultheiß
  */
@@ -32,10 +32,10 @@ public class CPPDiffLineFormulaExtractor extends AbstractingFormulaExtractor {
     }
 
     /**
-     * Extracts the feature formula as a string from a macro line (possibly within a diff).
+     * Extracts and parses the feature formula from a macro line (possibly within a diff).
      *
      * @param line The line of which to get the feature mapping
-     * @return The feature mapping as a String of the given line
+     * @return The feature mapping
      */
     @Override
     public Node extractFormula(final String line) throws UnparseableFormulaException {
@@ -64,13 +64,13 @@ public class CPPDiffLineFormulaExtractor extends AbstractingFormulaExtractor {
      * @return the abstracted formula
      */
     @Override
-    protected String abstractFormula(String formula) {
+    protected Node abstractFormula(String formula) {
         CExpressionLexer lexer = new CExpressionLexer(CharStreams.fromString(formula));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         CExpressionParser parser = new CExpressionParser(tokens);
         parser.addErrorListener(new ParseErrorListener(formula));
 
-        return parser.expression().accept(new ControllingCExpressionVisitor()).toString();
+        return parser.expression().accept(new ControllingCExpressionVisitor());
     }
 }

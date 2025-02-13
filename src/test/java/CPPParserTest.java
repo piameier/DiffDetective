@@ -23,8 +23,8 @@ public class CPPParserTest {
     private static List<TestCase> testCases() {
         return List.of(
                 new TestCase("#if A", new Literal("A")),
-                new TestCase("#ifdef A", new Literal("A")),
-                new TestCase("#ifndef A", new Not(new Literal("A"))),
+                new TestCase("#ifdef A", new Literal("defined(A)")),
+                new TestCase("#ifndef A", new Literal("defined(A)", false)),
                 new TestCase("#elif A", new Literal("A")),
 
                 new TestCase("#if !A", new Not(new Literal("A"))),
@@ -110,7 +110,7 @@ public class CPPParserTest {
                 new TestCase("#if ' ' == 32", new Literal("' '==32")),
                 new TestCase("#if (NAME<<1) > (1<<BITS)", new Literal("(NAME<<1)>(1<<BITS)")),
                 new TestCase("#if #cpu(sparc)", new Literal("cpu(sparc)")),
-                new TestCase("#ifdef \\U0001000", new Literal("\\U0001000")),
+                new TestCase("#ifdef \\U0001000", new Literal("defined(\\U0001000)")),
                 new TestCase("#if (defined(NAME) && (NAME >= 199905) && (NAME < 1991011)) ||     (NAME >= 300000) || defined(NAME)",
                         new Or(new And(new Literal("defined(NAME)"), new Literal("NAME>=199905"), new Literal("NAME<1991011")), new Literal("NAME>=300000"), new Literal("defined(NAME)"))),
                 new TestCase("#if __has_warning(\"-Wa-warning\"_foo)", new Literal("__has_warning(\"-Wa-warning\"_foo)")),

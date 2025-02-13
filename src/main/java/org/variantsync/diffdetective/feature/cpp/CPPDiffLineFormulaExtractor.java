@@ -2,6 +2,7 @@ package org.variantsync.diffdetective.feature.cpp;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.prop4j.Literal;
 import org.prop4j.Node;
 import org.prop4j.Not;
 import org.tinylog.Logger;
@@ -62,9 +63,19 @@ public class CPPDiffLineFormulaExtractor implements DiffLineFormulaExtractor {
             throw new UnparseableFormulaException(e);
         }
 
-        // negate for ifndef
-        if ("ifndef".equals(annotationType)) {
-            parsedFormula = new Not(parsedFormula);
+        // treat {@code #ifdef id} and {@code #ifndef id}
+        // like {@code defined(id)} and {@code !defined(id)}
+        if ("ifdef".equals(annotationType) || "ifndef".equals(annotationType)) {
+            if (parsedFormula instanceof Literal literal) {
+                literal.var = String.format("defined(%s)", literal.var);
+
+                // negate for ifndef
+                if ("ifndef".equals(annotationType)) {
+                    literal.positive = false;
+                }
+            } else {
+                throw new UnparseableFormulaException("When using #ifdef or #ifndef, only literals are allowed. Hence, \"" + line + "\" is disallowed.");
+            }
         }
 
         return parsedFormula;

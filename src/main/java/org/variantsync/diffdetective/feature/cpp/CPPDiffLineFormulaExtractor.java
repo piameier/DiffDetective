@@ -4,8 +4,10 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.prop4j.Node;
 import org.prop4j.Not;
+import org.tinylog.Logger;
+import org.variantsync.diffdetective.error.UncheckedUnParseableFormulaException;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
-import org.variantsync.diffdetective.feature.AbstractingFormulaExtractor;
+import org.variantsync.diffdetective.feature.DiffLineFormulaExtractor;
 import org.variantsync.diffdetective.feature.ParseErrorListener;
 import org.variantsync.diffdetective.feature.antlr.CExpressionLexer;
 import org.variantsync.diffdetective.feature.antlr.CExpressionParser;
@@ -22,14 +24,10 @@ import java.util.regex.Pattern;
  *
  * @author Paul Bittner, Sören Viegener, Benjamin Moosherr, Alexander Schultheiß
  */
-public class CPPDiffLineFormulaExtractor extends AbstractingFormulaExtractor {
+public class CPPDiffLineFormulaExtractor implements DiffLineFormulaExtractor {
     // ^[+-]?\s*#\s*(if|ifdef|ifndef|elif)(\s+(.*)|\((.*)\))$
     private static final String CPP_ANNOTATION_REGEX = "^[+-]?\\s*#\\s*(if|ifdef|ifndef|elif)([\\s(].*)$";
     private static final Pattern CPP_ANNOTATION_PATTERN = Pattern.compile(CPP_ANNOTATION_REGEX);
-
-    public CPPDiffLineFormulaExtractor() {
-        super(CPP_ANNOTATION_PATTERN);
-    }
 
     /**
      * Extracts and parses the feature formula from a macro line (possibly within a diff).
@@ -39,38 +37,36 @@ public class CPPDiffLineFormulaExtractor extends AbstractingFormulaExtractor {
      */
     @Override
     public Node extractFormula(final String line) throws UnparseableFormulaException {
-        // Delegate the formula extraction to AbstractingFormulaExtractor
-        Node fm = super.extractFormula(line);
-
-        // negate for ifndef
+        // Match the formula from the macro line
         final Matcher matcher = CPP_ANNOTATION_PATTERN.matcher(line);
-        if (matcher.find() && "ifndef".equals(matcher.group(1))) {
-            fm = new Not(fm);
+        if (!matcher.find()) {
+            throw new UnparseableFormulaException("Could not extract formula from line \"" + line + "\".");
+        }
+        String annotationType = matcher.group(1);
+        String formula = matcher.group(2);
+
+        // abstract complex formulas (e.g., if they contain arithmetics or macro calls)
+        Node parsedFormula;
+        try {
+            CExpressionLexer lexer = new CExpressionLexer(CharStreams.fromString(formula));
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+            CExpressionParser parser = new CExpressionParser(tokens);
+            parser.addErrorListener(new ParseErrorListener(formula));
+
+            parsedFormula = parser.expression().accept(new ControllingCExpressionVisitor());
+        } catch (UncheckedUnParseableFormulaException e) {
+            throw e.inner();
+        } catch (Exception e) {
+            Logger.warn(e);
+            throw new UnparseableFormulaException(e);
         }
 
-        return fm;
-    }
+        // negate for ifndef
+        if ("ifndef".equals(annotationType)) {
+            parsedFormula = new Not(parsedFormula);
+        }
 
-    /**
-     * Abstract the given formula.
-     * <p>
-     * First, the visitor uses ANTLR to parse the formula into a parse tree gives the tree to a {@link ControllingCExpressionVisitor}.
-     * The visitor traverses the tree starting from the root, searching for subtrees that must be abstracted.
-     * If such a subtree is found, the visitor calls an {@link AbstractingCExpressionVisitor} to abstract the part of
-     * the formula in the subtree.
-     * </p>
-     *
-     * @param formula that is to be abstracted
-     * @return the abstracted formula
-     */
-    @Override
-    protected Node abstractFormula(String formula) {
-        CExpressionLexer lexer = new CExpressionLexer(CharStreams.fromString(formula));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-        CExpressionParser parser = new CExpressionParser(tokens);
-        parser.addErrorListener(new ParseErrorListener(formula));
-
-        return parser.expression().accept(new ControllingCExpressionVisitor());
+        return parsedFormula;
     }
 }

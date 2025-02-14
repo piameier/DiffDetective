@@ -6,7 +6,7 @@ import org.prop4j.Literal;
 import org.prop4j.Node;
 import org.prop4j.Not;
 import org.tinylog.Logger;
-import org.variantsync.diffdetective.error.UncheckedUnParseableFormulaException;
+import org.variantsync.diffdetective.error.UncheckedUnparseableFormulaException;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
 import org.variantsync.diffdetective.feature.DiffLineFormulaExtractor;
 import org.variantsync.diffdetective.feature.ParseErrorListener;
@@ -56,7 +56,7 @@ public class CPPDiffLineFormulaExtractor implements DiffLineFormulaExtractor {
             parser.addErrorListener(new ParseErrorListener(formula));
 
             parsedFormula = parser.expression().accept(new ControllingCExpressionVisitor());
-        } catch (UncheckedUnParseableFormulaException e) {
+        } catch (UncheckedUnparseableFormulaException e) {
             throw e.inner();
         } catch (Exception e) {
             Logger.warn(e);

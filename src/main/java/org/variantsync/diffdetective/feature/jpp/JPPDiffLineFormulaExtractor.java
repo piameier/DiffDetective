@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.prop4j.Node;
 import org.tinylog.Logger;
-import org.variantsync.diffdetective.error.UncheckedUnParseableFormulaException;
+import org.variantsync.diffdetective.error.UncheckedUnparseableFormulaException;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
 import org.variantsync.diffdetective.feature.DiffLineFormulaExtractor;
 import org.variantsync.diffdetective.feature.ParseErrorListener;
@@ -56,7 +56,7 @@ public class JPPDiffLineFormulaExtractor implements DiffLineFormulaExtractor {
             parser.addErrorListener(new ParseErrorListener(formula));
             ParseTree tree = parser.expression();
             return tree.accept(new ControllingJPPExpressionVisitor());
-        } catch (UncheckedUnParseableFormulaException e) {
+        } catch (UncheckedUnparseableFormulaException e) {
             throw e.inner();
         } catch (Exception e) {
             Logger.warn(e);

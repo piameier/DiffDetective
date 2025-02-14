@@ -87,6 +87,7 @@ public class PreprocessorAnnotationParser implements AnnotationParser {
      * If no such formula could be parsed, returns a Literal with the line's condition as name.
      * @throws UnparseableFormulaException when {@link DiffLineFormulaExtractor#extractFormula(String)} throws.
      */
+    @Override
     public Node parseAnnotation(String line) throws UnparseableFormulaException {
         return extractor.extractFormula(line);
     }

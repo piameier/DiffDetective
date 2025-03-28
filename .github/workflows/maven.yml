@@ -18,6 +18,29 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: cachix/install-nix-action@v31
+    - name: List pre-installed store paths
+      run: find /nix/store -mindepth 1 -maxdepth 1 | sort > pre-installed
+    - uses: actions/cache/restore@v4
+      id: cache
+      with:
+        path: cache-closure.nar
+        key: nix-${{ hashFiles('.github/workflows/maven.yml', 'default.nix', 'nix/**', 'pom.xml', 'local-maven-repo') }}
+    - name: Import cache
+      if: steps.cache.outputs.cache-hit == 'true'
+      run: nix-store --import < cache-closure.nar
+    - name: Build dependency cache
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: nix-build --out-link dependencies nix/github-workflow-dependencies.nix
+    - name: Export cache
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        find /nix/store -mindepth 1 -maxdepth 1 | sort > store-paths
+        nix-store --export $(comm -13 pre-installed store-paths) > cache-closure.nar
+    - uses: actions/cache/save@v4
+      if: steps.cache.outputs.cache-hit != 'true'
+      with:
+        path: cache-closure.nar
+        key: nix-${{ hashFiles('.github/workflows/maven.yml', 'default.nix', 'nix/**', 'pom.xml', 'local-maven-repo') }}
     - name: Build
       run: nix-build
     - name: Upload Javadoc artifact

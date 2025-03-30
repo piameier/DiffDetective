@@ -3,7 +3,24 @@
   system ? builtins.currentSystem,
   pkgs ?
     import sources.nixpkgs {
-      overlays = [];
+      overlays = [
+        (final: previous: {
+          defaultGemConfig = previous.defaultGemConfig // {
+            jekyll-github-metadata = attrs: {
+              dontBuild = false;
+              patches = [
+                (final.fetchpatch {
+                  url = "https://github.com/jekyll/github-metadata/commit/17cc5af5e1fd95d98d43676610cc8a47969350ab.patch";
+                  hash = "sha256-dUqvnYsjfG5xQIYS48B3xz0GLVYo2BrDAnYUafmDFKw=";
+                  relative = "lib";
+                  stripLen = 1;
+                  extraPrefix = "lib/jekyll-github-metadata/";
+                })
+              ];
+            };
+          };
+        })
+      ];
       config = {};
       inherit system;
     },
@@ -93,7 +110,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
       if buildGitHubPages
       then ''
         mvn javadoc:javadoc
-        JEKYLL_ENV=production PAGES_REPO_NWO=VariantSync/DiffDetective JEKYLL_BUILD_REVISION= github-pages build
+        JEKYLL_ENV=production PAGES_REPO_NWO=VariantSync/DiffDetective JEKYLL_BUILD_REVISION= PAGES_DISABLE_NETWORK=1 github-pages build
         rm -rf _site/target
       ''
       else ""

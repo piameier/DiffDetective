@@ -10,7 +10,7 @@
   b8a9
 +#endif
  b9a11
--#ifdef d10 && \
+-#if d10 && \
 -  d11
 -  d12
 -#endif

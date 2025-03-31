@@ -1,5 +1,6 @@
 package org.variantsync.diffdetective.feature;
 
+import org.prop4j.Node;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
 
 /**
@@ -21,7 +22,7 @@ public interface DiffLineFormulaExtractor {
      * @param line The line of which to get the feature mapping
      * @return The feature mapping as a String of the given line
      */
-    String extractFormula(final String line) throws UnparseableFormulaException;
+    Node extractFormula(final String line) throws UnparseableFormulaException;
 
     /**
      * Resolves any macros in the given formula that are relevant for feature annotations.

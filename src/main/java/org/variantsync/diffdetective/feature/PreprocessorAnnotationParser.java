@@ -34,64 +34,49 @@ public class PreprocessorAnnotationParser implements AnnotationParser {
 
     /**
      * Default parser for C preprocessor annotations.
-     * Created by invoking {@link #PreprocessorAnnotationParser(Pattern, PropositionalFormulaParser, DiffLineFormulaExtractor)}.
+     * Created by invoking {@link #PreprocessorAnnotationParser(Pattern, DiffLineFormulaExtractor)}.
      */
     public static final PreprocessorAnnotationParser CPPAnnotationParser =
-            new PreprocessorAnnotationParser(CPP_PATTERN, PropositionalFormulaParser.Default, new CPPDiffLineFormulaExtractor());
+            new PreprocessorAnnotationParser(CPP_PATTERN, new CPPDiffLineFormulaExtractor());
 
     /**
      * Default parser for <a href="https://www.slashdev.ca/javapp/">JavaPP (Java PreProcessor)</a> annotations.
-     * Created by invoking {@link #PreprocessorAnnotationParser(Pattern, PropositionalFormulaParser, DiffLineFormulaExtractor)}.
+     * Created by invoking {@link #PreprocessorAnnotationParser(Pattern, DiffLineFormulaExtractor)}.
      */
     public static final PreprocessorAnnotationParser JPPAnnotationParser =
-            new PreprocessorAnnotationParser(JPP_PATTERN, PropositionalFormulaParser.Default, new JPPDiffLineFormulaExtractor());
+            new PreprocessorAnnotationParser(JPP_PATTERN, new JPPDiffLineFormulaExtractor());
 
     // Pattern that is used to identify the AnnotationType of a given annotation.
     private final Pattern annotationPattern;
-    private final PropositionalFormulaParser formulaParser;
     private final DiffLineFormulaExtractor extractor;
-
-    /**
-     * Invokes {@link #PreprocessorAnnotationParser(Pattern, PropositionalFormulaParser, DiffLineFormulaExtractor)} with
-     * the {@link PropositionalFormulaParser#Default default formula parser} and a new {@link DiffLineFormulaExtractor}.
-     *
-     * @param annotationPattern Pattern that is used to identify the AnnotationType of a given annotation; {@link #CPP_PATTERN} provides an example
-     */
-    public PreprocessorAnnotationParser(final Pattern annotationPattern, final DiffLineFormulaExtractor formulaExtractor) {
-        this(annotationPattern, PropositionalFormulaParser.Default, formulaExtractor);
-    }
 
     /**
      * Creates a new preprocessor annotation parser.
      *
      * @param annotationPattern Pattern that is used to identify the AnnotationType of a given annotation; {@link #CPP_PATTERN} provides an example
-     * @param formulaParser     Parser that is used to parse propositional formulas in conditional annotations (e.g., the formula <code>f</code> in <code>#if f</code>).
-     * @param formulaExtractor  An extractor that extracts the formula part of a preprocessor annotation that is then given to the formulaParser.
+     * @param formulaExtractor  An extractor that extracts the formula part of a preprocessor annotation
      */
-    public PreprocessorAnnotationParser(final Pattern annotationPattern, final PropositionalFormulaParser formulaParser, DiffLineFormulaExtractor formulaExtractor) {
+    public PreprocessorAnnotationParser(final Pattern annotationPattern, DiffLineFormulaExtractor formulaExtractor) {
         this.annotationPattern = annotationPattern;
-        this.formulaParser = formulaParser;
         this.extractor = formulaExtractor;
     }
 
     /**
      * Creates a new preprocessor annotation parser for C preprocessor annotations.
      *
-     * @param formulaParser    Parser that is used to parse propositional formulas in conditional annotations (e.g., the formula <code>f</code> in <code>#if f</code>).
-     * @param formulaExtractor An extractor that extracts the formula part of a preprocessor annotation that is then given to the formulaParser.
+     * @param formulaExtractor An extractor that extracts the formula part of a preprocessor annotation
      */
-    public static PreprocessorAnnotationParser CreateCppAnnotationParser(final PropositionalFormulaParser formulaParser, DiffLineFormulaExtractor formulaExtractor) {
-        return new PreprocessorAnnotationParser(CPP_PATTERN, formulaParser, formulaExtractor);
+    public static PreprocessorAnnotationParser CreateCppAnnotationParser(DiffLineFormulaExtractor formulaExtractor) {
+        return new PreprocessorAnnotationParser(CPP_PATTERN, formulaExtractor);
     }
 
     /**
      * Creates a new preprocessor annotation parser for <a href="https://www.slashdev.ca/javapp/">JavaPP (Java PreProcessor)</a> annotations.
      *
-     * @param formulaParser    Parser that is used to parse propositional formulas in conditional annotations (e.g., the formula <code>f</code> in <code>#if f</code>).
-     * @param formulaExtractor An extractor that extracts the formula part of a preprocessor annotation that is then given to the formulaParser.
+     * @param formulaExtractor An extractor that extracts the formula part of a preprocessor annotation
      */
-    public static PreprocessorAnnotationParser CreateJppAnnotationParser(final PropositionalFormulaParser formulaParser, DiffLineFormulaExtractor formulaExtractor) {
-        return new PreprocessorAnnotationParser(JPP_PATTERN, formulaParser, formulaExtractor);
+    public static PreprocessorAnnotationParser CreateJppAnnotationParser(DiffLineFormulaExtractor formulaExtractor) {
+        return new PreprocessorAnnotationParser(JPP_PATTERN, formulaExtractor);
     }
 
     /**
@@ -102,8 +87,9 @@ public class PreprocessorAnnotationParser implements AnnotationParser {
      * If no such formula could be parsed, returns a Literal with the line's condition as name.
      * @throws UnparseableFormulaException when {@link DiffLineFormulaExtractor#extractFormula(String)} throws.
      */
+    @Override
     public Node parseAnnotation(String line) throws UnparseableFormulaException {
-        return this.formulaParser.parse(extractor.extractFormula(line));
+        return extractor.extractFormula(line);
     }
 
     @Override

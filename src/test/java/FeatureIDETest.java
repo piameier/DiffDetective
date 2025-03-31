@@ -92,4 +92,11 @@ public class FeatureIDETest {
 //        System.out.println(eq);
 //        System.out.println(FixTrueFalse.On(eq));
 //    }
+
+    @Test
+    public void testWeirdVariableNames() {
+        final Node node = new Literal("A@#$%^&*( )}{]`~]}\\|,./<>?`[)(_");
+        assertTrue(SAT.isSatisfiable(node));
+    }
+
 }

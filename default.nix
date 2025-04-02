@@ -134,7 +134,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
 
     # install jars in "$out"
     install -Dm644 "target/diffdetective-${version}.jar" "$out/share/java/DiffDetective.jar"
-    local jar="$out/share/java/DiffDetective/DiffDetective.jar"
+    local jar="$out/share/java/DiffDetective/DiffDetective-jar-with-dependencies.jar"
     install -Dm644 "target/diffdetective-${version}-jar-with-dependencies.jar" "$jar"
     makeWrapper "${jre-minimal}/bin/java" "$out/bin/DiffDetective" --add-flags "-cp \"$jar\"" \
       --prefix PATH : "${pkgs.graphviz}/bin"

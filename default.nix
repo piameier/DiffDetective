@@ -139,7 +139,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
     makeWrapper \
       "${pkgs.jdk}/bin/java" "$out/bin/DiffDetective" \
       --add-flags "-cp \"$jar\"" \
-      --prefix PATH : "${pkgs.graphviz}/bin"
+      --prefix PATH : "${pkgs.lib.makeBinPath [pkgs.graphviz]}"
 
     ${
       if buildGitHubPages

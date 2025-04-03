@@ -136,13 +136,15 @@ pkgs.stdenvNoCC.mkDerivation rec {
     install -Dm644 "target/diffdetective-$version.jar" "$out/share/java/DiffDetective.jar"
     local jar="$out/share/java/DiffDetective/DiffDetective-jar-with-dependencies.jar"
     install -Dm644 "target/diffdetective-$version-jar-with-dependencies.jar" "$jar"
-    makeWrapper "${pkgs.jdk}/bin/java" "$out/bin/DiffDetective" --add-flags "-cp \"$jar\"" \
+    makeWrapper \
+      "${pkgs.jdk}/bin/java" "$out/bin/DiffDetective" \
+      --add-flags "-cp \"$jar\"" \
       --prefix PATH : "${pkgs.graphviz}/bin"
 
-    # install documentation in "$out"
     ${
       if buildGitHubPages
       then ''
+        # install documentation in "$out"
         mkdir "$out/share/github-pages"
         cp -r _site "$out/share/github-pages/DiffDetective"
       ''

@@ -9,6 +9,7 @@ import org.variantsync.diffdetective.util.fide.FormulaUtils;
 import java.util.HashMap;
 
 import static org.variantsync.diffdetective.util.fide.FormulaUtils.negate;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.and;
 
 /**
  * Class with static functions for satisfiability solving, potentially with some optimizations.
@@ -123,7 +124,7 @@ public final class SAT {
         /// = TAUT(!left || right)
         /// = !SAT(!(!left || right))
         /// = !SAT(left && !right))
-        return !isSatisfiable(new And(left, negate(right)));
+        return !isSatisfiable(and(left, negate(right)));
     }
 
     /**
@@ -134,6 +135,6 @@ public final class SAT {
      * @return True iff <code>left</code> &lt;=&gt; <code>right</code> is a tautology.
      */
     public static boolean equivalent(final Node left, final Node right) {
-        return isTautology(new Equals(left, right));
+        return isTautology(FormulaUtils.equivalent(left, right));
     }
 }

@@ -1,9 +1,12 @@
 package org.variantsync.diffdetective.util.fide;
 
 import org.prop4j.And;
+import org.prop4j.Equals;
+import org.prop4j.Implies;
 import org.prop4j.Literal;
 import org.prop4j.Node;
 import org.prop4j.Not;
+import org.prop4j.Or;
 import org.variantsync.diffdetective.analysis.logic.SAT;
 import org.variantsync.diffdetective.util.Assert;
 import org.variantsync.functjonal.Cast;
@@ -43,6 +46,18 @@ public class FormulaUtils {
 
     public static And and(Node... nodes) {
         return new And(nodes);
+    }
+
+    public static Or or(Node... nodes) {
+        return new Or(nodes);
+    }
+
+    public static Implies implies(Node a, Node b) {
+        return new Implies(a, b);
+    }
+
+    public static Equals equivalent(Node a, Node b) {
+        return new Equals(a, b);
     }
 
     /** Recursively counts the number of instances of {@link Literal} in {@code formula}. */

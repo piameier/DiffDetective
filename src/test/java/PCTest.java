@@ -1,7 +1,5 @@
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.prop4j.And;
-import org.prop4j.Literal;
 import org.prop4j.Node;
 import org.tinylog.Logger;
 import org.variantsync.diffdetective.analysis.logic.SAT;
@@ -16,16 +14,18 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.and;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.negate;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.var;
 import static org.variantsync.diffdetective.variation.diff.Time.AFTER;
 import static org.variantsync.diffdetective.variation.diff.Time.BEFORE;
-import static org.variantsync.diffdetective.util.fide.FormulaUtils.negate;
 
 public class PCTest {
-    private static final Literal A = new Literal("A");
-    private static final Literal B = new Literal("B");
-    private static final Literal C = new Literal("C");
-    private static final Literal D = new Literal("D");
-    private static final Literal E = new Literal("E");
+    private static final Node A = var("A");
+    private static final Node B = var("B");
+    private static final Node C = var("C");
+    private static final Node D = var("D");
+    private static final Node E = var("E");
     record ExpectedPC(Node before, Node after) {}
     record TestCase(Path file, Map<String, ExpectedPC> expectedResult) {
         @Override
@@ -38,27 +38,27 @@ public class PCTest {
     private final static TestCase a = new TestCase(
             Path.of("a.diff"),
             Map.of(
-                    "1", new ExpectedPC(A, new And(A, B)),
-                    "2", new ExpectedPC(A, new And(A, C, negate(B))),
-                    "3", new ExpectedPC(new And(A, D, E), new And(A, D)),
+                    "1", new ExpectedPC(A, and(A, B)),
+                    "2", new ExpectedPC(A, and(A, C, negate(B))),
+                    "3", new ExpectedPC(and(A, D, E), and(A, D)),
                     "4", new ExpectedPC(A, A)
             ));
     private final static TestCase elif = new TestCase(
             Path.of("elif.diff"),
             Map.of(
                     "1", new ExpectedPC(A, A),
-                    "2", new ExpectedPC(new And(negate(A), B), new And(negate(A), B)),
-                    "3", new ExpectedPC(new And(negate(A), negate(B), C), new And(negate(A), B)),
-                    "4", new ExpectedPC(new And(negate(A), negate(B), C), new And(negate(A), negate(B), D)),
-                    "5", new ExpectedPC(new And(negate(A), negate(B), negate(C)), new And(negate(A), negate(B), negate(D)))
+                    "2", new ExpectedPC(and(negate(A), B), and(negate(A), B)),
+                    "3", new ExpectedPC(and(negate(A), negate(B), C), and(negate(A), B)),
+                    "4", new ExpectedPC(and(negate(A), negate(B), C), and(negate(A), negate(B), D)),
+                    "5", new ExpectedPC(and(negate(A), negate(B), negate(C)), and(negate(A), negate(B), negate(D)))
             ));
     private final static TestCase elze = new TestCase(
             Path.of("else.diff"),
             Map.of(
-                    "1", new ExpectedPC(A, new And(A, B)),
-                    "2", new ExpectedPC(new And(negate(A), C), new And(A, negate(B), C)),
-                    "3", new ExpectedPC(new And(negate(A), C), new And(A, negate(B), negate(C))),
-                    "4", new ExpectedPC(new And(negate(A), negate(C)), negate(A))
+                    "1", new ExpectedPC(A, and(A, B)),
+                    "2", new ExpectedPC(and(negate(A), C), and(A, negate(B), C)),
+                    "3", new ExpectedPC(and(negate(A), C), and(A, negate(B), negate(C))),
+                    "4", new ExpectedPC(and(negate(A), negate(C)), negate(A))
             ));
 
     private static String errorAt(final String node, String time, Node is, Node should) {

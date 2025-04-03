@@ -33,8 +33,9 @@ pkgs.stdenvNoCC.mkDerivation rec {
   # The single source of truth for the version number is stored in `pom.xml`.
   # Hence, this XML file needs to be parsed to extract the current version.
   version = pkgs.lib.removeSuffix "\n" (pkgs.lib.readFile
-    (pkgs.runCommandLocal "DiffDetective-version" {}
-      "${pkgs.xq-xml}/bin/xq -x '/project/version' ${./pom.xml} > $out"));
+    (pkgs.runCommandLocal "DiffDetective-version" {
+      nativeBuildInputs = [pkgs.xq-xml];
+    } "xq -x '/project/version' ${./pom.xml} > $out"));
   src = with pkgs.lib.fileset;
     toSource {
       root = ./.;
@@ -44,11 +45,14 @@ pkgs.stdenvNoCC.mkDerivation rec {
   nativeBuildInputs = [
     pkgs.maven
     pkgs.makeWrapper
-    pkgs.graphviz
   ] ++ pkgs.lib.optional buildGitHubPages (pkgs.ruby.withPackages (rubyPkgs: [
     rubyPkgs.github-pages
     rubyPkgs.jekyll-theme-cayman
   ]));
+
+  nativeCheckInputs = [
+    pkgs.graphviz
+  ];
 
   # Maven needs to download necessary dependencies which is impure because it
   # requires network access. Hence, we download all dependencies as a

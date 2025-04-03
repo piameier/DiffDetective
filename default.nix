@@ -133,9 +133,9 @@ pkgs.stdenvNoCC.mkDerivation rec {
     runHook preInstall
 
     # install jars in "$out"
-    install -Dm644 "target/diffdetective-${version}.jar" "$out/share/java/DiffDetective.jar"
+    install -Dm644 "target/diffdetective-$version.jar" "$out/share/java/DiffDetective.jar"
     local jar="$out/share/java/DiffDetective/DiffDetective-jar-with-dependencies.jar"
-    install -Dm644 "target/diffdetective-${version}-jar-with-dependencies.jar" "$jar"
+    install -Dm644 "target/diffdetective-$version-jar-with-dependencies.jar" "$jar"
     makeWrapper "${pkgs.jdk}/bin/java" "$out/bin/DiffDetective" --add-flags "-cp \"$jar\"" \
       --prefix PATH : "${pkgs.graphviz}/bin"
 

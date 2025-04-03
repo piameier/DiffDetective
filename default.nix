@@ -33,22 +33,26 @@ pkgs.stdenvNoCC.mkDerivation rec {
   # The single source of truth for the version number is stored in `pom.xml`.
   # Hence, this XML file needs to be parsed to extract the current version.
   version = pkgs.lib.removeSuffix "\n" (pkgs.lib.readFile
-    (pkgs.runCommandLocal "DiffDetective-version" {}
-      "${pkgs.xq-xml}/bin/xq -x '/project/version' ${./pom.xml} > $out"));
+    (pkgs.runCommandLocal "DiffDetective-version" {
+      nativeBuildInputs = [pkgs.xq-xml];
+    } "xq -x '/project/version' ${./pom.xml} > $out"));
   src = with pkgs.lib.fileset;
     toSource {
       root = ./.;
       fileset = gitTracked ./.;
     };
 
-  nativeBuildInputs = with pkgs; [
-    maven
-    makeWrapper
-    graphviz
-  ] ++ pkgs.lib.optional buildGitHubPages (ruby.withPackages (pkgs: with pkgs; [
-    github-pages
-    jekyll-theme-cayman
+  nativeBuildInputs = [
+    pkgs.maven
+    pkgs.makeWrapper
+  ] ++ pkgs.lib.optional buildGitHubPages (pkgs.ruby.withPackages (rubyPkgs: [
+    rubyPkgs.github-pages
+    rubyPkgs.jekyll-theme-cayman
   ]));
+
+  nativeCheckInputs = [
+    pkgs.graphviz
+  ];
 
   # Maven needs to download necessary dependencies which is impure because it
   # requires network access. Hence, we download all dependencies as a
@@ -58,7 +62,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
     inherit version;
     src = pkgs.lib.sourceByRegex ./. ["^pom.xml$" "^local-maven-repo(/.*)?$"];
 
-    nativeBuildInputs = with pkgs; [maven];
+    nativeBuildInputs = [pkgs.maven];
 
     buildPhase = ''
       runHook preBuild
@@ -92,10 +96,6 @@ pkgs.stdenvNoCC.mkDerivation rec {
   # - `maven` contains a local maven repository with DiffDetective and all its
   #   build-time and run-time dependencies.
   outputs = ["out" "maven"];
-
-  jre-minimal = pkgs.callPackage (import "${sources.nixpkgs}/pkgs/development/compilers/openjdk/jre.nix") {
-    modules = ["java.base" "java.desktop"];
-  };
 
   buildPhase = ''
     runHook preBuild
@@ -133,16 +133,18 @@ pkgs.stdenvNoCC.mkDerivation rec {
     runHook preInstall
 
     # install jars in "$out"
-    install -Dm644 "target/diffdetective-${version}.jar" "$out/share/java/DiffDetective.jar"
-    local jar="$out/share/java/DiffDetective/DiffDetective.jar"
-    install -Dm644 "target/diffdetective-${version}-jar-with-dependencies.jar" "$jar"
-    makeWrapper "${jre-minimal}/bin/java" "$out/bin/DiffDetective" --add-flags "-cp \"$jar\"" \
-      --prefix PATH : "${pkgs.graphviz}/bin"
+    install -Dm644 "target/diffdetective-$version.jar" "$out/share/java/DiffDetective.jar"
+    local jar="$out/share/java/DiffDetective/DiffDetective-jar-with-dependencies.jar"
+    install -Dm644 "target/diffdetective-$version-jar-with-dependencies.jar" "$jar"
+    makeWrapper \
+      "${pkgs.jdk}/bin/java" "$out/bin/DiffDetective" \
+      --add-flags "-cp \"$jar\"" \
+      --prefix PATH : "${pkgs.lib.makeBinPath [pkgs.graphviz]}"
 
-    # install documentation in "$out"
     ${
       if buildGitHubPages
       then ''
+        # install documentation in "$out"
         mkdir "$out/share/github-pages"
         cp -r _site "$out/share/github-pages/DiffDetective"
       ''

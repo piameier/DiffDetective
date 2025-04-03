@@ -93,10 +93,6 @@ pkgs.stdenvNoCC.mkDerivation rec {
   #   build-time and run-time dependencies.
   outputs = ["out" "maven"];
 
-  jre-minimal = pkgs.callPackage (import "${sources.nixpkgs}/pkgs/development/compilers/openjdk/jre.nix") {
-    modules = ["java.base" "java.desktop"];
-  };
-
   buildPhase = ''
     runHook preBuild
 
@@ -136,7 +132,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
     install -Dm644 "target/diffdetective-${version}.jar" "$out/share/java/DiffDetective.jar"
     local jar="$out/share/java/DiffDetective/DiffDetective-jar-with-dependencies.jar"
     install -Dm644 "target/diffdetective-${version}-jar-with-dependencies.jar" "$jar"
-    makeWrapper "${jre-minimal}/bin/java" "$out/bin/DiffDetective" --add-flags "-cp \"$jar\"" \
+    makeWrapper "${pkgs.jdk}/bin/java" "$out/bin/DiffDetective" --add-flags "-cp \"$jar\"" \
       --prefix PATH : "${pkgs.graphviz}/bin"
 
     # install documentation in "$out"

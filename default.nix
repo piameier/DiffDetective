@@ -41,13 +41,13 @@ pkgs.stdenvNoCC.mkDerivation rec {
       fileset = gitTracked ./.;
     };
 
-  nativeBuildInputs = with pkgs; [
-    maven
-    makeWrapper
-    graphviz
-  ] ++ pkgs.lib.optional buildGitHubPages (ruby.withPackages (pkgs: with pkgs; [
-    github-pages
-    jekyll-theme-cayman
+  nativeBuildInputs = [
+    pkgs.maven
+    pkgs.makeWrapper
+    pkgs.graphviz
+  ] ++ pkgs.lib.optional buildGitHubPages (pkgs.ruby.withPackages (rubyPkgs: [
+    rubyPkgs.github-pages
+    rubyPkgs.jekyll-theme-cayman
   ]));
 
   # Maven needs to download necessary dependencies which is impure because it
@@ -58,7 +58,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
     inherit version;
     src = pkgs.lib.sourceByRegex ./. ["^pom.xml$" "^local-maven-repo(/.*)?$"];
 
-    nativeBuildInputs = with pkgs; [maven];
+    nativeBuildInputs = [pkgs.maven];
 
     buildPhase = ''
       runHook preBuild

@@ -4,16 +4,16 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
-import org.prop4j.And;
-import org.prop4j.Literal;
 import org.prop4j.Node;
-import org.prop4j.Not;
-import org.prop4j.Or;
 import org.variantsync.diffdetective.feature.antlr.CExpressionParser;
 import org.variantsync.diffdetective.feature.antlr.CExpressionVisitor;
+import org.variantsync.diffdetective.util.fide.FormulaUtils;
 
 import java.util.List;
 import java.util.function.Function;
+
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.negate;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.var;
 
 /**
  * Visitor that controls how formulas given as an ANTLR parse tree are abstracted.
@@ -73,7 +73,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Node
             // Negation can be modeled in the formula.
             // All other unary operators need to be abstracted.
             if (ctx.unaryOperator().getText().equals("!")) {
-                return new Not(ctx.primaryExpression().accept(this));
+                return negate(ctx.primaryExpression().accept(this));
             } else {
                 return abstractToLiteral(ctx);
             }
@@ -250,7 +250,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Node
     //    ;
     @Override
     public Node visitLogicalAndExpression(CExpressionParser.LogicalAndExpressionContext ctx) {
-        return visitLogicalExpression(ctx, And::new);
+        return visitLogicalExpression(ctx, FormulaUtils::and);
     }
 
     // logicalOrExpression
@@ -258,7 +258,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Node
     //    ;
     @Override
     public Node visitLogicalOrExpression(CExpressionParser.LogicalOrExpressionContext ctx) {
-        return visitLogicalExpression(ctx, Or::new);
+        return visitLogicalExpression(ctx, FormulaUtils::or);
     }
 
     // logicalOperand
@@ -302,6 +302,6 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Node
     }
 
     private Node abstractToLiteral(ParserRuleContext ctx) {
-        return new Literal(ctx.accept(abstractingVisitor).toString());
+        return var(ctx.accept(abstractingVisitor).toString());
     }
 }

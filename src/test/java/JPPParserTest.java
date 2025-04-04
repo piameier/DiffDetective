@@ -1,10 +1,7 @@
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.prop4j.And;
-import org.prop4j.Literal;
 import org.prop4j.Node;
-import org.prop4j.Or;
 import org.variantsync.diffdetective.diff.result.DiffParseException;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
 import org.variantsync.diffdetective.feature.PreprocessorAnnotationParser;
@@ -27,6 +24,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.variantsync.diffdetective.util.Assert.fail;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.and;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.negate;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.or;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.var;
 
 // Test cases for a parser of https://www.slashdev.ca/javapp/
 public class JPPParserTest {
@@ -41,35 +42,35 @@ public class JPPParserTest {
                 /// #if expression
                 // expression := <operand> <operator> <operand> | [!]defined(name)
                 // expression := operand == operand
-                new JPPParserTest.TestCase<>("//#if 1 == -42", new Literal("1==-42")),
+                new JPPParserTest.TestCase<>("//#if 1 == -42", var("1==-42")),
                 // expression := operand != operand
-                new JPPParserTest.TestCase<>("// #if 1 != 0", new Literal("1!=0")),
+                new JPPParserTest.TestCase<>("// #if 1 != 0", var("1!=0")),
                 // expression := operand <= operand
-                new JPPParserTest.TestCase<>("//#if -1 <= 0", new Literal("-1<=0")),
+                new JPPParserTest.TestCase<>("//#if -1 <= 0", var("-1<=0")),
                 // expression := operand < operand
-                new JPPParserTest.TestCase<>("//#if \"str\" < 0", new Literal("\"str\"<0")),
+                new JPPParserTest.TestCase<>("//#if \"str\" < 0", var("\"str\"<0")),
                 // expression := operand >= operand
-                new JPPParserTest.TestCase<>("//   #if \"str\" >= \"str\"", new Literal("\"str\">=\"str\"")),
+                new JPPParserTest.TestCase<>("//   #if \"str\" >= \"str\"", var("\"str\">=\"str\"")),
                 // expression := operand > operand
-                new JPPParserTest.TestCase<>("//  #if 1.2 > 0", new Literal("1.2>0")),
+                new JPPParserTest.TestCase<>("//  #if 1.2 > 0", var("1.2>0")),
                 // expression := defined(name)
-                new JPPParserTest.TestCase<>("//#if defined(property)", new Literal("defined(property)")),
+                new JPPParserTest.TestCase<>("//#if defined(property)", var("defined(property)")),
                 // expression := !defined(name)
-                new JPPParserTest.TestCase<>("//#if !defined(property)", new Literal("defined(property)", false)),
+                new JPPParserTest.TestCase<>("//#if !defined(property)", negate(var("defined(property)"))),
                 // operand := ${property}
-                new JPPParserTest.TestCase<>("//#if ${os_version} == 4.1", new Literal("${os_version}==4.1")),
+                new JPPParserTest.TestCase<>("//#if ${os_version} == 4.1", var("${os_version}==4.1")),
 
                 /// #if expression and expression
-                new JPPParserTest.TestCase<>("//#if 1 > 2 and defined( FEAT_A  )", new And(new Literal("1>2"), new Literal("defined(FEAT_A)"))),
+                new JPPParserTest.TestCase<>("//#if 1 > 2 and defined( FEAT_A  )", and(var("1>2"), var("defined(FEAT_A)"))),
 
                 /// #if expression or expression
-                new JPPParserTest.TestCase<>("//#if !defined(left) or defined(right)", new Or(new Literal("defined(left)", false), new Literal("defined(right)"))),
+                new JPPParserTest.TestCase<>("//#if !defined(left) or defined(right)", or(negate(var("defined(left)")), var("defined(right)"))),
 
                 /// #if expression and expression or expression
-                new JPPParserTest.TestCase<>("//#if ${os_version} == 4.1 and 1 > -42 or defined(ALL)", new Or(new And(new Literal("${os_version}==4.1"), new Literal("1>-42")), new Literal("defined(ALL)"))),
+                new JPPParserTest.TestCase<>("//#if ${os_version} == 4.1 and 1 > -42 or defined(ALL)", or(and(var("${os_version}==4.1"), var("1>-42")), var("defined(ALL)"))),
 
                 /// #if "string with whitespace"
-                new JPPParserTest.TestCase<>("//#if ${ test } == \"a b\"", new Literal("${test}==\"a b\""))
+                new JPPParserTest.TestCase<>("//#if ${ test } == \"a b\"", var("${test}==\"a b\""))
         );
     }
 
@@ -103,7 +104,7 @@ public class JPPParserTest {
 
     @ParameterizedTest
     @MethodSource("abstractionTests")
-    public void testCase(JPPParserTest.TestCase<String, String> testCase) throws UnparseableFormulaException {
+    public void testCase(JPPParserTest.TestCase<String, Node> testCase) throws UnparseableFormulaException {
         assertEquals(
                 testCase.expected,
                 new JPPDiffLineFormulaExtractor().extractFormula(testCase.input())

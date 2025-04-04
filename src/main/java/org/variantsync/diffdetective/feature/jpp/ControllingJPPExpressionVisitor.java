@@ -3,15 +3,16 @@ package org.variantsync.diffdetective.feature.jpp;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.prop4j.And;
-import org.prop4j.Literal;
 import org.prop4j.Node;
-import org.prop4j.Or;
 import org.variantsync.diffdetective.feature.antlr.JPPExpressionParser;
 import org.variantsync.diffdetective.feature.antlr.JPPExpressionVisitor;
+import org.variantsync.diffdetective.util.fide.FormulaUtils;
 
 import java.util.List;
 import java.util.function.Function;
+
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.negate;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.var;
 
 /**
  * Transform a parse tree into a {@link org.prop4j.Node formula}.
@@ -33,7 +34,7 @@ public class ControllingJPPExpressionVisitor extends AbstractParseTreeVisitor<No
     //    ;
     @Override
     public Node visitLogicalOrExpression(JPPExpressionParser.LogicalOrExpressionContext ctx) {
-        return visitLogicalExpression(ctx, Or::new);
+        return visitLogicalExpression(ctx, FormulaUtils::or);
     }
 
     // logicalAndExpression
@@ -41,7 +42,7 @@ public class ControllingJPPExpressionVisitor extends AbstractParseTreeVisitor<No
     //    ;
     @Override
     public Node visitLogicalAndExpression(JPPExpressionParser.LogicalAndExpressionContext ctx) {
-        return visitLogicalExpression(ctx, And::new);
+        return visitLogicalExpression(ctx, FormulaUtils::and);
     }
 
     // primaryExpression
@@ -68,7 +69,7 @@ public class ControllingJPPExpressionVisitor extends AbstractParseTreeVisitor<No
     //    ;
     @Override
     public Node visitComparisonExpression(JPPExpressionParser.ComparisonExpressionContext ctx) {
-        return new Literal(ctx.getText());
+        return var(ctx.getText());
     }
 
     // operand
@@ -79,7 +80,7 @@ public class ControllingJPPExpressionVisitor extends AbstractParseTreeVisitor<No
     //    ;
     @Override
     public Node visitOperand(JPPExpressionParser.OperandContext ctx) {
-        return new Literal(ctx.getText());
+        return var(ctx.getText());
     }
 
     // definedExpression
@@ -87,7 +88,7 @@ public class ControllingJPPExpressionVisitor extends AbstractParseTreeVisitor<No
     //    ;
     @Override
     public Node visitDefinedExpression(JPPExpressionParser.DefinedExpressionContext ctx) {
-        return new Literal(String.format("defined(%s)", ctx.Identifier().getText()));
+        return var(String.format("defined(%s)", ctx.Identifier().getText()));
     }
 
     // undefinedExpression
@@ -95,7 +96,7 @@ public class ControllingJPPExpressionVisitor extends AbstractParseTreeVisitor<No
     //    ;
     @Override
     public Node visitUndefinedExpression(JPPExpressionParser.UndefinedExpressionContext ctx) {
-        return new Literal(String.format("defined(%s)", ctx.Identifier().getText()), false);
+        return negate(var(String.format("defined(%s)", ctx.Identifier().getText())));
     }
 
     // propertyExpression

@@ -28,6 +28,19 @@ public class DiffFilter {
             .build();
 
     /**
+     * Default value for diff filters.
+     * It disallows merge commits, only considers patches that modified files,
+     * and only allows source files of C/C++ projects ("h", "hpp", "c", "cpp").
+     */
+    public static final DiffFilter DEFAULT_DIFF_FILTER =
+            new DiffFilter.Builder()
+                    .allowMerge(false)
+                    .allowCommitsWithoutParents(false)
+                    .allowedChangeTypes(DiffEntry.ChangeType.MODIFY)
+                    .allowedFileExtensions("h", "hpp", "c", "cpp")
+                    .build();
+
+    /**
      * A list of allowed file extensions for patches.
      * When this list is not empty all file extension that it does not contain will be filtered.
      */

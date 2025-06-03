@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  */
 public class CPPDiffLineFormulaExtractor implements DiffLineFormulaExtractor {
     // ^[+-]?\s*#\s*(if|ifdef|ifndef|elif)(\s+(.*)|\((.*)\))$
-    private static final String CPP_ANNOTATION_REGEX = "^[+-]?\\s*#\\s*(if|ifdef|ifndef|elif)([\\s(].*)$";
+    private static final String CPP_ANNOTATION_REGEX = "^[+-]?\\s*#\\s*(if|ifdef|ifndef|elif|elifdef|elifndef)([\\s(].*)$";
     private static final Pattern CPP_ANNOTATION_PATTERN = Pattern.compile(CPP_ANNOTATION_REGEX);
 
     /**
@@ -63,18 +63,18 @@ public class CPPDiffLineFormulaExtractor implements DiffLineFormulaExtractor {
             throw new UnparseableFormulaException(e);
         }
 
-        // treat {@code #ifdef id} and {@code #ifndef id}
+        // treat {@code #ifdef id}, {@code #ifndef id}, {@code #elifdef id} and {@code #elifndef id}
         // like {@code defined(id)} and {@code !defined(id)}
-        if ("ifdef".equals(annotationType) || "ifndef".equals(annotationType)) {
+        if (annotationType.endsWith("def")) {
             if (parsedFormula instanceof Literal literal) {
                 literal.var = String.format("defined(%s)", literal.var);
 
                 // negate for ifndef
-                if ("ifndef".equals(annotationType)) {
+                if (annotationType.endsWith("ndef")) {
                     literal.positive = false;
                 }
             } else {
-                throw new UnparseableFormulaException("When using #ifdef or #ifndef, only literals are allowed. Hence, \"" + line + "\" is disallowed.");
+                throw new UnparseableFormulaException("When using #ifdef, #ifndef, #elifdef or #elifndef, only literals are allowed. Hence, \"" + line + "\" is disallowed.");
             }
         }
 

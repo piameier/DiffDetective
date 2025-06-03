@@ -25,6 +25,8 @@ public class CPPParserTest {
                 new TestCase("#if A", var("A")),
                 new TestCase("#ifdef A", var("defined(A)")),
                 new TestCase("#ifndef A", negate(var("defined(A)"))),
+                new TestCase("#elifdef A", var("defined(A)")),
+                new TestCase("#elifndef A", negate(var("defined(A)"))),
                 new TestCase("#elif A", var("A")),
 
                 new TestCase("#if !A", negate(var("A"))),

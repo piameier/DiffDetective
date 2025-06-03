@@ -100,7 +100,6 @@ public class ExampleFinder implements Analysis.Hooks {
     private boolean checkIfExample(Analysis analysis, String localDiff) {
 //        Logger.info(localDiff);
 
-        final Repository currentRepo = analysis.getRepository();
         final VariationDiff<DiffLinesLabel> variationDiff = analysis.getCurrentVariationDiff();
         final AnnotationParser annotationParser = analysis.getRepository().getParseOptions().variationDiffParseOptions().annotationParser();
 

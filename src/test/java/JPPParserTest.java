@@ -85,13 +85,13 @@ public class JPPParserTest {
 
                 // Empty formula
                 new JPPParserTest.ThrowingTestCase("//#if"),
-                new JPPParserTest.ThrowingTestCase("#if defined()"),
-                new JPPParserTest.ThrowingTestCase("#if ${} > 0"),
+                new JPPParserTest.ThrowingTestCase("//#if defined()"),
+                new JPPParserTest.ThrowingTestCase("//#if ${} > 0"),
 
                 // incomplete expressions
-                new JPPParserTest.ThrowingTestCase("#if 1 >"),
-                new JPPParserTest.ThrowingTestCase("#if  == 2"),
-                new JPPParserTest.ThrowingTestCase("#if  ${version} > ")
+                new JPPParserTest.ThrowingTestCase("//#if 1 >"),
+                new JPPParserTest.ThrowingTestCase("//#if  == 2"),
+                new JPPParserTest.ThrowingTestCase("//#if  ${version} > ")
         );
     }
 

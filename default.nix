@@ -26,7 +26,7 @@
     },
   doCheck ? true,
   buildGitHubPages ? true,
-  dependenciesHash ? "sha256-LJQfV426han/+H9ejUla7JvN1LS/c9l3e7hODs4Z7Kg=",
+  dependenciesHash ? "sha256-OdagSk6jYCkkw/kPoOJlma9yEK7hMBcNkuxE6qt0ra8=",
 }:
 pkgs.stdenvNoCC.mkDerivation rec {
   pname = "DiffDetective";

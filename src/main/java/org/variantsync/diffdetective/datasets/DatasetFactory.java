@@ -104,7 +104,7 @@ public class DatasetFactory {
         if (preload) {
             Logger.info("Preloading repositories:");
             for (final Repository repo : repos) {
-                repo.getGitRepo().run();
+                repo.preload();
             }
         }
 
@@ -112,7 +112,7 @@ public class DatasetFactory {
             Logger.info("Pulling repositories:");
             for (final Repository repo : repos) {
                 try {
-                    Assert.assertTrue(repo.getGitRepo().run().pull().call().isSuccessful());
+                    Assert.assertTrue(repo.getGitRepo().pull().call().isSuccessful());
                 } catch (GitAPIException e) {
                     Logger.error(e, "Failed to pull repository '{}'", repo.getRepositoryName());
                 }

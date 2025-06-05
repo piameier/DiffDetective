@@ -223,8 +223,15 @@ public class Repository {
 	/**
 	 * Returns the internal jgit representation of this repository that allows to inspect the repositories history and content.
 	 */
-	public Lazy<Git> getGitRepo() {
-		return git;
+	public Git getGitRepo() {
+		return git.run();
+	}
+
+	/**
+	 * Prepares the Git repository (e.g., clones it if necessary).
+	 */
+	public void preload() {
+		getGitRepo();
 	}
 
 	/**

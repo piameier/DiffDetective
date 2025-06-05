@@ -65,7 +65,7 @@ public class GitDiffer {
      * @param repository The repository for whose history to obtain diffs.
      */
     public GitDiffer(final Repository repository) {
-        this.git = repository.getGitRepo().run();
+        this.git = repository.getGitRepo();
         this.diffFilter = repository.getDiffFilter();
         this.parseOptions = repository.getParseOptions();
     }

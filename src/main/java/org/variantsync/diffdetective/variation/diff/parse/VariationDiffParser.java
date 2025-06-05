@@ -432,7 +432,7 @@ public class VariationDiffParser {
      * @throws IOException when an error occurred.
      */
     public static CommitDiff parseCommit(Repository repo, String commitHash) throws IOException {
-        final Git git = repo.getGitRepo().run();
+        final Git git = repo.getGitRepo();
         Assert.assertNotNull(git);
         final RevWalk revWalk = new RevWalk(git.getRepository());
         final RevCommit childCommit = revWalk.parseCommit(ObjectId.fromString(commitHash));

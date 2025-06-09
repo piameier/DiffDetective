@@ -1,6 +1,7 @@
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.prop4j.Node;
+import org.variantsync.diffdetective.datasets.predefined.MarlinControllingCExpressionVisitor;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
 import org.variantsync.diffdetective.feature.Annotation;
 import org.variantsync.diffdetective.feature.AnnotationType;
@@ -140,6 +141,28 @@ public class CPPParserTest {
         );
     }
 
+    private static List<TestCase> nonMarlinTestCases() {
+        return List.of(
+                new TestCase("#if ENABLED(A)", var("ENABLED(A)")),
+                new TestCase("#if DISABLED(A)", var("DISABLED(A)")),
+                new TestCase("#if ENABLED(FEATURE_A) && DISABLED(FEATURE_B)", and(var("ENABLED(FEATURE_A)"), var("DISABLED(FEATURE_B)"))),
+                new TestCase("#if ENABLED(A, B)", var("ENABLED(A,B)")),
+                new TestCase("#if OTHER(A, B)", var("OTHER(A,B)")),
+                new TestCase("#if A", var("A"))
+        );
+    }
+
+    private static List<TestCase> marlinTestCases() {
+        return List.of(
+                new TestCase("#if ENABLED(A)", var("A")),
+                new TestCase("#if DISABLED(A)", negate(var("A"))),
+                new TestCase("#if ENABLED(FEATURE_A) && DISABLED(FEATURE_B)", and(var("FEATURE_A"), negate(var("FEATURE_B")))),
+                new TestCase("#if ENABLED(A, B)", var("ENABLED(A,B)")),
+                new TestCase("#if OTHER(A, B)", var("OTHER(A,B)")),
+                new TestCase("#if A", var("A"))
+        );
+    }
+
     private static List<ThrowingTestCase> throwingTestCases() {
         return List.of(
                 // Empty formula
@@ -150,13 +173,23 @@ public class CPPParserTest {
     }
 
     @ParameterizedTest
-    @MethodSource("testCases")
+    @MethodSource({"testCases", "nonMarlinTestCases"})
     public void testCase(TestCase testCase) throws UnparseableFormulaException {
         assertEquals(
                 testCase.expectedAnnotation(),
                 new CPPAnnotationParser().parseAnnotation(testCase.formula())
         );
     }
+
+    @ParameterizedTest
+    @MethodSource({"testCases", "marlinTestCases"})
+    public void marlinTestCase(TestCase testCase) throws UnparseableFormulaException {
+        assertEquals(
+                testCase.expectedAnnotation(),
+                new CPPAnnotationParser(new MarlinControllingCExpressionVisitor()).parseAnnotation(testCase.formula())
+        );
+    }
+
 
     @ParameterizedTest
     @MethodSource("throwingTestCases")

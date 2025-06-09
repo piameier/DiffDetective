@@ -275,7 +275,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Node
     // logicalOrExpression
     //    :   logicalAndExpression ( '||' logicalAndExpression)*
     //    ;
-    private Node visitLogicalExpression(ParserRuleContext expressionContext, Function<Node[], Node> newLogicNode) {
+    protected Node visitLogicalExpression(ParserRuleContext expressionContext, Function<Node[], Node> newLogicNode) {
         if (expressionContext.getChildCount() == 1) {
             return expressionContext.getChild(0).accept(this);
         } else {
@@ -291,7 +291,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Node
         }
     }
 
-    private Node recurseOnSingleChild(ParserRuleContext ctx) {
+    protected Node recurseOnSingleChild(ParserRuleContext ctx) {
         if (ctx.getChildCount() > 1) {
             // We have to abstract the expression if there is more than one operand
             return abstractToLiteral(ctx);
@@ -301,7 +301,7 @@ public class ControllingCExpressionVisitor extends AbstractParseTreeVisitor<Node
         }
     }
 
-    private Node abstractToLiteral(ParserRuleContext ctx) {
+    protected Node abstractToLiteral(ParserRuleContext ctx) {
         return var(ctx.accept(abstractingVisitor).toString());
     }
 }

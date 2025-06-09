@@ -10,13 +10,11 @@ import java.nio.file.Path;
 /**
  * Default repository for Marlin.
  *
- * @author Kevin Jedelhauser, Paul Maximilian Bittner
+ * @author Kevin Jedelhauser, Paul Maximilian Bittner, Benjamin Moosherr
  */
 public class Marlin {
     public static final AnnotationParser ANNOTATION_PARSER =
-            new CPPAnnotationParser(
-                    // TODO new MarlinCPPDiffLineFormulaExtractor()
-            );
+            new CPPAnnotationParser(new MarlinControllingCExpressionVisitor());
 
     /**
      * Clones Marlin from Github.

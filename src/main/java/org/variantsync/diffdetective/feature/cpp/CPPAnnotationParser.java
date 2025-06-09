@@ -31,8 +31,15 @@ public class CPPAnnotationParser extends PreprocessorAnnotationParser {
     private static final String CPP_ANNOTATION_REGEX = "^[+-]?\\s*#\\s*(?<directive>if|ifdef|ifndef|elif|elifdef|elifndef|else|endif)(?<formula>[\\s(].*)?$";
     private static final Pattern CPP_ANNOTATION_PATTERN = Pattern.compile(CPP_ANNOTATION_REGEX);
 
-    public CPPAnnotationParser() {
+    private ParseTreeVisitor<Node> formulaVisitor;
+
+    public CPPAnnotationParser(ParseTreeVisitor<Node> formulaVisitor) {
         super(CPP_ANNOTATION_PATTERN);
+        this.formulaVisitor = formulaVisitor;
+    }
+
+    public CPPAnnotationParser() {
+        this(new ControllingCExpressionVisitor());
     }
 
     @Override
@@ -45,7 +52,7 @@ public class CPPAnnotationParser extends PreprocessorAnnotationParser {
             CExpressionParser parser = new CExpressionParser(tokens);
             parser.addErrorListener(new ParseErrorListener(formula));
 
-            parsedFormula = parser.expression().accept(new ControllingCExpressionVisitor());
+            parsedFormula = parser.expression().accept(formulaVisitor);
         } catch (UncheckedUnparseableFormulaException e) {
             throw e.inner();
         } catch (Exception e) {

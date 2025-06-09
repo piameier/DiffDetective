@@ -26,7 +26,7 @@
     },
   doCheck ? true,
   buildGitHubPages ? true,
-  dependenciesHash ? "sha256-LJQfV426han/+H9ejUla7JvN1LS/c9l3e7hODs4Z7Kg=",
+  dependenciesHash ? "sha256-OdagSk6jYCkkw/kPoOJlma9yEK7hMBcNkuxE6qt0ra8=",
 }:
 pkgs.stdenvNoCC.mkDerivation rec {
   pname = "DiffDetective";
@@ -57,10 +57,22 @@ pkgs.stdenvNoCC.mkDerivation rec {
   # Maven needs to download necessary dependencies which is impure because it
   # requires network access. Hence, we download all dependencies as a
   # fixed-output derivation. This also serves as a nice cache.
+  #
+  # We use the hash of the input files to invalidate the maven cache whenever
+  # the input files change. This is purely for easing maintenance. In case a
+  # maintainer forgets (or simply doesn't know) to change the output hash to
+  # force a rebuild (and obtain the new, correct hash) this usually (without
+  # this naming hack) result in use of a stall cash, essentially behaving like
+  # an unreproducable derivation where a second build results in a different
+  # output. By changing the name of the fixed output derivation whenever
+  # `mavenRepoSrc` changes, we prevent this stall cache as the resulting store
+  # path will never exist (except when the cache is valid).
+  mavenRepoSrc = pkgs.lib.sourceByRegex ./. ["^pom.xml$" "^local-maven-repo(/.*)?$"];
+  mavenRepoSrcName = with pkgs.lib; last (splitString "/" mavenRepoSrc.outPath);
   mavenRepo = pkgs.stdenv.mkDerivation {
-    pname = "${pname}-mavenRepo";
+    pname = "${pname}-mavenRepo-${mavenRepoSrcName}";
     inherit version;
-    src = pkgs.lib.sourceByRegex ./. ["^pom.xml$" "^local-maven-repo(/.*)?$"];
+    src = mavenRepoSrc;
 
     nativeBuildInputs = [pkgs.maven];
 

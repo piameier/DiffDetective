@@ -1,7 +1,6 @@
 package org.variantsync.diffdetective.datasets;
 
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.tinylog.Logger;
@@ -45,6 +44,11 @@ public class Repository {
 	private final String repositoryName;
 
 	/**
+	 * A function that extracts the list of commits that are represented by this repository instance.
+	 */
+	private CommitLister commitLister;
+
+	/**
 	 * Filter determining which files and commits to consider for diffs.
 	 */
 	private DiffFilter diffFilter;
@@ -55,7 +59,7 @@ public class Repository {
 	private PatchDiffParseOptions parseOptions;
 
 	private final Lazy<Git> git = Lazy.of(this::load);
-	
+
 	/**
 	 * Creates a repository.
 	 * 
@@ -63,6 +67,7 @@ public class Repository {
 	 * @param localPath The local path where the repository can be found or should be cloned to.
 	 * @param remote The remote url of the repository. May be <code>null</code> if local.
 	 * @param repositoryName Name of the cloned repository (<code>null</code> if local)
+	 * @param commitLister extracts the commits from {@link #getGitRepo()} that should be represented.
 	 * @param parseOptions Omit some debug data to save RAM.
 	 * @param diffFilter Filter determining which files and commits to consider for diffs.
 	 */
@@ -71,12 +76,14 @@ public class Repository {
 			final Path localPath,
 			final URI remote,
 			final String repositoryName,
+			final CommitLister commitLister,
 			final PatchDiffParseOptions parseOptions,
 			final DiffFilter diffFilter) {
 		this.repoLocation = repoLocation;
 		this.localPath = localPath;
 		this.remote = remote;
 		this.repositoryName = repositoryName;
+		this.commitLister = commitLister;
 		this.parseOptions = parseOptions;
 		this.diffFilter = diffFilter;
 	}
@@ -84,14 +91,23 @@ public class Repository {
 	/**
 	 * Creates repository of the given source and with all other settings set to default values.
 	 * @see Repository
+	 * <p>
+	 * Defaults to {@link CommitLister#TraverseHEAD}, {@link PatchDiffParseOptions#Default} and {@link DiffFilter#ALLOW_ALL}.
 	 */
 	public Repository(
 			final RepositoryLocationType repoLocation,
 			final Path localPath,
 			final URI remote,
 			final String repositoryName) {
-		this(repoLocation, localPath, remote, repositoryName,
-                PatchDiffParseOptions.Default, DiffFilter.ALLOW_ALL);
+		this(
+			repoLocation,
+			localPath,
+			remote,
+			repositoryName,
+			CommitLister.TraverseHEAD,
+			PatchDiffParseOptions.Default,
+			DiffFilter.ALLOW_ALL
+		);
 	}
 
 	/**
@@ -251,12 +267,7 @@ public class Repository {
 	 * Returns all commits in the repository's history.
 	 */
 	public Iterator<RevCommit> getCommits() {
-		try {
-			return getGitRepo().log().call().iterator();
-		} catch (GitAPIException e) {
-			Logger.warn("Could not get log for git repository {}", getRepositoryName());
-			throw new RuntimeException(e);
-		}
+		return commitLister.listCommits(this);
 	}
 
 	/**

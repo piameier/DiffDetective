@@ -14,6 +14,7 @@ import org.variantsync.diffdetective.diff.result.DiffError;
 import org.variantsync.diffdetective.diff.result.DiffParseException;
 import org.variantsync.diffdetective.diff.text.DiffLineNumber;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
+import org.variantsync.diffdetective.feature.Annotation;
 import org.variantsync.diffdetective.feature.AnnotationType;
 import org.variantsync.diffdetective.util.Assert;
 import org.variantsync.diffdetective.variation.DiffLinesLabel;
@@ -313,9 +314,14 @@ public class VariationDiffParser {
 
         // Is this line a conditional macro?
         // Note: The following line doesn't handle comments and line continuations correctly.
-        var annotationType = options.annotationParser().determineAnnotationType(line.toString());
+        Annotation annotation;
+        try {
+            annotation = options.annotationParser().parseAnnotation(line.toString());
+        } catch (UnparseableFormulaException e) {
+            throw DiffParseException.Unparseable(e, fromLine);
+        }
 
-        if (annotationType == AnnotationType.Endif) {
+        if (annotation.type() == AnnotationType.Endif) {
             lastArtifact = null;
 
             // Do not create a node for ENDIF, but update the line numbers of the closed if-chain
@@ -324,7 +330,7 @@ public class VariationDiffParser {
                     popIfChain(stack, fromLine)
             );
         } else if (options.collapseMultipleCodeLines()
-                && annotationType == AnnotationType.None
+                && annotation.type() == AnnotationType.None
                 && lastArtifact != null
                 && lastArtifact.diffType.equals(diffType)
                 && lastArtifact.getToLine().inDiff() == fromLine.inDiff()) {
@@ -332,25 +338,19 @@ public class VariationDiffParser {
             lastArtifact.getLabel().addDiffLines(line.getLines());
             lastArtifact.setToLine(toLine);
         } else {
-            try {
-                NodeType nodeType = NodeType.fromAnnotationType(annotationType);
+            NodeType nodeType = NodeType.fromAnnotationType(annotation.type());
 
-                DiffNode<DiffLinesLabel> newNode = new DiffNode<DiffLinesLabel>(
-                        diffType,
-                        nodeType,
-                        fromLine,
-                        toLine,
-                        nodeType == NodeType.ARTIFACT || nodeType == NodeType.ELSE
-                                ? null
-                                : options.annotationParser().parseAnnotation(line.toString()),
-                        new DiffLinesLabel(line.getLines())
-                );
+            DiffNode<DiffLinesLabel> newNode = new DiffNode<DiffLinesLabel>(
+                    diffType,
+                    nodeType,
+                    fromLine,
+                    toLine,
+                    annotation.formula(),
+                    new DiffLinesLabel(line.getLines())
+            );
 
-                addNode(newNode);
-                lastArtifact = newNode.isArtifact() ? newNode : null;
-            } catch (UnparseableFormulaException e) {
-                throw DiffParseException.Unparseable(e, fromLine);
-            }
+            addNode(newNode);
+            lastArtifact = newNode.isArtifact() ? newNode : null;
         }
     }
 

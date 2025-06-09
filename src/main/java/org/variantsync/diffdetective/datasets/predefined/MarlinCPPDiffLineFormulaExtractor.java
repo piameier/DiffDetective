@@ -1,6 +1,6 @@
 package org.variantsync.diffdetective.datasets.predefined;
 
-import org.variantsync.diffdetective.feature.cpp.CPPDiffLineFormulaExtractor;
+import org.variantsync.diffdetective.feature.DiffLineFormulaExtractor;
 
 import java.util.regex.Pattern;
 
@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
  *
  * @author Paul Bittner
  */
-public class MarlinCPPDiffLineFormulaExtractor extends CPPDiffLineFormulaExtractor {
+public class MarlinCPPDiffLineFormulaExtractor implements DiffLineFormulaExtractor {
     private static final Pattern ENABLED_PATTERN = Pattern.compile("ENABLED\\s*\\(([^)]*)\\)");
     private static final Pattern DISABLED_PATTERN = Pattern.compile("DISABLED\\s*\\(([^)]*)\\)");
 
@@ -20,7 +20,7 @@ public class MarlinCPPDiffLineFormulaExtractor extends CPPDiffLineFormulaExtract
         return
                 replaceAll(ENABLED_PATTERN, "$1",
                         replaceAll(DISABLED_PATTERN, "!($1)",
-                                super.resolveFeatureMacroFunctions(formula)));
+                                formula));
     }
 
     private String replaceAll(Pattern pattern, String replacement, String string) {

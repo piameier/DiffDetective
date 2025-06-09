@@ -17,14 +17,6 @@ import org.variantsync.diffdetective.error.UnparseableFormulaException;
  */
 public interface DiffLineFormulaExtractor {
     /**
-     * Extracts the feature formula as a string from a line (possibly within a diff).
-     *
-     * @param line The line of which to get the feature mapping
-     * @return The feature mapping as a String of the given line
-     */
-    Node extractFormula(final String line) throws UnparseableFormulaException;
-
-    /**
      * Resolves any macros in the given formula that are relevant for feature annotations.
      * For example, in {@link org.variantsync.diffdetective.datasets.predefined.MarlinCPPDiffLineFormulaExtractor Marlin},
      * feature annotations are given by the custom <code>ENABLED</code> and <code>DISABLED</code> macros,

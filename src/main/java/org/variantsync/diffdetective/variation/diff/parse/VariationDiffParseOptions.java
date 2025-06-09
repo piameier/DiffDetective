@@ -1,7 +1,7 @@
 package org.variantsync.diffdetective.variation.diff.parse;
 
 import org.variantsync.diffdetective.feature.AnnotationParser;
-import org.variantsync.diffdetective.feature.PreprocessorAnnotationParser;
+import org.variantsync.diffdetective.feature.cpp.CPPAnnotationParser;
 
 /**
  * Parse options that should be used when parsing {@link org.variantsync.diffdetective.variation.diff.VariationDiff}s.
@@ -47,10 +47,10 @@ public record VariationDiffParseOptions(
 
     /**
      * Default value for VariationDiffParseOptions that does not remember parsed unix diffs
-     * and uses the default value for the parsing annotations ({@link PreprocessorAnnotationParser#CPPAnnotationParser}).
+     * and uses the default value for the parsing annotations ({@link CPPAnnotationParser}).
      */
     public static final VariationDiffParseOptions Default = new VariationDiffParseOptions(
-            PreprocessorAnnotationParser.CPPAnnotationParser,
+            new CPPAnnotationParser(),
             false,
             false
     );

@@ -2,7 +2,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.prop4j.Node;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
-import org.variantsync.diffdetective.feature.cpp.CPPDiffLineFormulaExtractor;
+import org.variantsync.diffdetective.feature.Annotation;
+import org.variantsync.diffdetective.feature.AnnotationType;
+import org.variantsync.diffdetective.feature.cpp.CPPAnnotationParser;
 
 import java.util.List;
 
@@ -14,7 +16,14 @@ import static org.variantsync.diffdetective.util.fide.FormulaUtils.var;
 import static org.variantsync.diffdetective.util.fide.FormulaUtils.negate;
 
 public class CPPParserTest {
-    private static record TestCase(String formula, Node expected) {
+    private static record TestCase(String formula, Node expectedFormula, AnnotationType expectedType) {
+        public TestCase(String formula, Node expectedFormula) {
+                this(formula, expectedFormula, AnnotationType.If);
+        }
+
+        public Annotation expectedAnnotation() {
+                return new Annotation(expectedType, expectedFormula);
+        }
     }
 
     private static record ThrowingTestCase(String formula) {
@@ -22,12 +31,21 @@ public class CPPParserTest {
 
     private static List<TestCase> testCases() {
         return List.of(
+                // ignored directives
+                new TestCase("ifdef A", null, AnnotationType.None),
+                new TestCase("", null, AnnotationType.None),
+                new TestCase("#", null, AnnotationType.None),
+                new TestCase("#error A", null, AnnotationType.None),
+                new TestCase("#iferror A", null, AnnotationType.None),
+
                 new TestCase("#if A", var("A")),
                 new TestCase("#ifdef A", var("defined(A)")),
                 new TestCase("#ifndef A", negate(var("defined(A)"))),
-                new TestCase("#elifdef A", var("defined(A)")),
-                new TestCase("#elifndef A", negate(var("defined(A)"))),
-                new TestCase("#elif A", var("A")),
+                new TestCase("#elifdef A", var("defined(A)"), AnnotationType.Elif),
+                new TestCase("#elifndef A", negate(var("defined(A)")), AnnotationType.Elif),
+                new TestCase("#elif A", var("A"), AnnotationType.Elif),
+                new TestCase("#else", null, AnnotationType.Else),
+                new TestCase("#endif", null, AnnotationType.Endif),
 
                 new TestCase("#if !A", negate(var("A"))),
                 new TestCase("#if A && B", and(var("A"), var("B"))),
@@ -124,13 +142,6 @@ public class CPPParserTest {
 
     private static List<ThrowingTestCase> throwingTestCases() {
         return List.of(
-                // Invalid macro
-                new ThrowingTestCase(""),
-                new ThrowingTestCase("#"),
-                new ThrowingTestCase("ifdef A"),
-                new ThrowingTestCase("#error A"),
-                new ThrowingTestCase("#iferror A"),
-
                 // Empty formula
                 new ThrowingTestCase("#ifdef"),
                 new ThrowingTestCase("#ifdef // Comment"),
@@ -142,8 +153,8 @@ public class CPPParserTest {
     @MethodSource("testCases")
     public void testCase(TestCase testCase) throws UnparseableFormulaException {
         assertEquals(
-                testCase.expected,
-                new CPPDiffLineFormulaExtractor().extractFormula(testCase.formula())
+                testCase.expectedAnnotation(),
+                new CPPAnnotationParser().parseAnnotation(testCase.formula())
         );
     }
 
@@ -151,7 +162,7 @@ public class CPPParserTest {
     @MethodSource("throwingTestCases")
     public void throwingTestCase(ThrowingTestCase testCase) {
         assertThrows(UnparseableFormulaException.class, () ->
-                new CPPDiffLineFormulaExtractor().extractFormula(testCase.formula)
+                new CPPAnnotationParser().parseAnnotation(testCase.formula)
         );
     }
 }

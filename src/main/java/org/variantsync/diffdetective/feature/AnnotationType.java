@@ -9,34 +9,39 @@ public enum AnnotationType {
      * The piece of text (e.g., "#if ...") contains a conditional annotation that starts a new
      * annotated subtree in the variation tree.
      */
-    If("if"),
+    If("if", true),
 
     /**
      * The piece of text (e.g., "#elif ...") contains a conditional annotation which is only checked
      * if the conditions of all preceding annotations belonging to the same annotation chain are not fulfilled.
      */
-    Elif("elif"),
+    Elif("elif", true),
 
     /**
      * The piece of text (e.g., "#else") contains an annotation that marks a subtree as used alternative
      * if the condition of the preceding annotation in the same annotation chain is not fulfilled.
      */
-    Else("else"),
+    Else("else", false),
 
     /**
      * The piece of text (e.g., "#endif") marks the end of an annotation (chain).
      */
-    Endif("endif"),
+    Endif("endif", false),
 
     /**
      * The piece of text contains no annotation. This usually means that it contains an artifact.
      */
-    None("NONE");
+    None("NONE", false);
 
     public final String name;
+    /**
+     * Does this type of annotation require a formula?
+     */
+    public final boolean requiresFormula;
 
-    AnnotationType(String name) {
+    AnnotationType(String name, boolean requiresFormula) {
         this.name = name;
+        this.requiresFormula = requiresFormula;
     }
 
     /**

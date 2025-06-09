@@ -4,8 +4,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.prop4j.Node;
 import org.variantsync.diffdetective.diff.result.DiffParseException;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
-import org.variantsync.diffdetective.feature.PreprocessorAnnotationParser;
-import org.variantsync.diffdetective.feature.jpp.JPPDiffLineFormulaExtractor;
+import org.variantsync.diffdetective.feature.Annotation;
+import org.variantsync.diffdetective.feature.AnnotationType;
+import org.variantsync.diffdetective.feature.jpp.JPPAnnotationParser;
 import org.variantsync.diffdetective.util.IO;
 import org.variantsync.diffdetective.variation.DiffLinesLabel;
 import org.variantsync.diffdetective.variation.diff.VariationDiff;
@@ -37,52 +38,57 @@ public class JPPParserTest {
     private record ThrowingTestCase(String formula) {
     }
 
-    private static List<JPPParserTest.TestCase<String, Node>> abstractionTests() {
+    private static TestCase<String, Annotation> abstrationTestCase(String input, Node expected) {
+        return new TestCase<>(input, new Annotation(AnnotationType.If, expected));
+    }
+
+    private static List<JPPParserTest.TestCase<String, Annotation>> abstractionTests() {
         return List.of(
+                // source code lines
+                new TestCase<>("", new Annotation(AnnotationType.None)),
+                new TestCase<>("if (A) {", new Annotation(AnnotationType.None)),
+                new TestCase<>("#", new Annotation(AnnotationType.None)),
+                new TestCase<>("ifdef A", new Annotation(AnnotationType.None)),
+                new TestCase<>("#error A", new Annotation(AnnotationType.None)),
+                new TestCase<>("#iferror A", new Annotation(AnnotationType.None)),
+
                 /// #if expression
                 // expression := <operand> <operator> <operand> | [!]defined(name)
                 // expression := operand == operand
-                new JPPParserTest.TestCase<>("//#if 1 == -42", var("1==-42")),
+                abstrationTestCase("//#if 1 == -42", var("1==-42")),
                 // expression := operand != operand
-                new JPPParserTest.TestCase<>("// #if 1 != 0", var("1!=0")),
+                abstrationTestCase("// #if 1 != 0", var("1!=0")),
                 // expression := operand <= operand
-                new JPPParserTest.TestCase<>("//#if -1 <= 0", var("-1<=0")),
+                abstrationTestCase("//#if -1 <= 0", var("-1<=0")),
                 // expression := operand < operand
-                new JPPParserTest.TestCase<>("//#if \"str\" < 0", var("\"str\"<0")),
+                abstrationTestCase("//#if \"str\" < 0", var("\"str\"<0")),
                 // expression := operand >= operand
-                new JPPParserTest.TestCase<>("//   #if \"str\" >= \"str\"", var("\"str\">=\"str\"")),
+                abstrationTestCase("//   #if \"str\" >= \"str\"", var("\"str\">=\"str\"")),
                 // expression := operand > operand
-                new JPPParserTest.TestCase<>("//  #if 1.2 > 0", var("1.2>0")),
+                abstrationTestCase("//  #if 1.2 > 0", var("1.2>0")),
                 // expression := defined(name)
-                new JPPParserTest.TestCase<>("//#if defined(property)", var("defined(property)")),
+                abstrationTestCase("//#if defined(property)", var("defined(property)")),
                 // expression := !defined(name)
-                new JPPParserTest.TestCase<>("//#if !defined(property)", negate(var("defined(property)"))),
+                abstrationTestCase("//#if !defined(property)", negate(var("defined(property)"))),
                 // operand := ${property}
-                new JPPParserTest.TestCase<>("//#if ${os_version} == 4.1", var("${os_version}==4.1")),
+                abstrationTestCase("//#if ${os_version} == 4.1", var("${os_version}==4.1")),
 
                 /// #if expression and expression
-                new JPPParserTest.TestCase<>("//#if 1 > 2 and defined( FEAT_A  )", and(var("1>2"), var("defined(FEAT_A)"))),
+                abstrationTestCase("//#if 1 > 2 and defined( FEAT_A  )", and(var("1>2"), var("defined(FEAT_A)"))),
 
                 /// #if expression or expression
-                new JPPParserTest.TestCase<>("//#if !defined(left) or defined(right)", or(negate(var("defined(left)")), var("defined(right)"))),
+                abstrationTestCase("//#if !defined(left) or defined(right)", or(negate(var("defined(left)")), var("defined(right)"))),
 
                 /// #if expression and expression or expression
-                new JPPParserTest.TestCase<>("//#if ${os_version} == 4.1 and 1 > -42 or defined(ALL)", or(and(var("${os_version}==4.1"), var("1>-42")), var("defined(ALL)"))),
+                abstrationTestCase("//#if ${os_version} == 4.1 and 1 > -42 or defined(ALL)", or(and(var("${os_version}==4.1"), var("1>-42")), var("defined(ALL)"))),
 
                 /// #if "string with whitespace"
-                new JPPParserTest.TestCase<>("//#if ${ test } == \"a b\"", var("${test}==\"a b\""))
+                abstrationTestCase("//#if ${ test } == \"a b\"", var("${test}==\"a b\""))
         );
     }
 
     private static List<JPPParserTest.ThrowingTestCase> throwingTestCases() {
         return List.of(
-                // Invalid macro
-                new JPPParserTest.ThrowingTestCase(""),
-                new JPPParserTest.ThrowingTestCase("#"),
-                new JPPParserTest.ThrowingTestCase("ifdef A"),
-                new JPPParserTest.ThrowingTestCase("#error A"),
-                new JPPParserTest.ThrowingTestCase("#iferror A"),
-
                 // Empty formula
                 new JPPParserTest.ThrowingTestCase("//#if"),
                 new JPPParserTest.ThrowingTestCase("//#if defined()"),
@@ -107,7 +113,7 @@ public class JPPParserTest {
     public void testCase(JPPParserTest.TestCase<String, Node> testCase) throws UnparseableFormulaException {
         assertEquals(
                 testCase.expected,
-                new JPPDiffLineFormulaExtractor().extractFormula(testCase.input())
+                new JPPAnnotationParser().parseAnnotation(testCase.input())
         );
     }
 
@@ -115,7 +121,7 @@ public class JPPParserTest {
     @MethodSource("throwingTestCases")
     public void throwingTestCase(JPPParserTest.ThrowingTestCase testCase) {
         assertThrows(UnparseableFormulaException.class, () ->
-                new JPPDiffLineFormulaExtractor().extractFormula(testCase.formula)
+                new JPPAnnotationParser().parseAnnotation(testCase.formula)
         );
     }
 
@@ -129,7 +135,7 @@ public class JPPParserTest {
                     new VariationDiffParseOptions(
                             false,
                             false
-                    ).withAnnotationParser(PreprocessorAnnotationParser.JPPAnnotationParser)
+                    ).withAnnotationParser(new JPPAnnotationParser())
             );
         }
 

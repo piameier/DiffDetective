@@ -2,51 +2,41 @@ package org.variantsync.diffdetective.feature.cpp;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 import org.prop4j.Literal;
 import org.prop4j.Node;
 import org.prop4j.Not;
 import org.tinylog.Logger;
 import org.variantsync.diffdetective.error.UncheckedUnparseableFormulaException;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
-import org.variantsync.diffdetective.feature.DiffLineFormulaExtractor;
 import org.variantsync.diffdetective.feature.ParseErrorListener;
+import org.variantsync.diffdetective.feature.PreprocessorAnnotationParser;
 import org.variantsync.diffdetective.feature.antlr.CExpressionLexer;
 import org.variantsync.diffdetective.feature.antlr.CExpressionParser;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Extracts the expression from a C preprocessor statement.
- * For example, given the annotation {@code "#if defined(A) || B()"}, the extractor would extract
- * {@code new Or(new Literal("A"), new Literal("B"))}. The extractor detects if, ifdef, ifndef and
- * elif annotations. (Other annotations do not have expressions.)
- * The given pre-processor statement might also be a line in a diff (i.e., preceeded by a - or +).
+ * Parses a C preprocessor statement.
+ * For example, given the annotation {@code "#if defined(A) || B()"},
+ * this class extracts the type {@link org.variantsync.diffdetective.feature.AnnotationType#If} with the formula {@code new Or(new Literal("A"), new Literal("B"))}.
+ * The extractor detects if, ifdef, ifndef, elif, elifdef, elifndef, else and endif annotations.
+ * All other annotations are considered source code.
+ * The given CPP statement might also be a line in a diff (i.e., preceded by a - or +).
  *
  * @author Paul Bittner, Sören Viegener, Benjamin Moosherr, Alexander Schultheiß
  */
-public class CPPDiffLineFormulaExtractor implements DiffLineFormulaExtractor {
-    // ^[+-]?\s*#\s*(if|ifdef|ifndef|elif)(\s+(.*)|\((.*)\))$
-    private static final String CPP_ANNOTATION_REGEX = "^[+-]?\\s*#\\s*(if|ifdef|ifndef|elif|elifdef|elifndef)([\\s(].*)$";
+public class CPPAnnotationParser extends PreprocessorAnnotationParser {
+    // Note that this pattern doesn't handle comments between {@code #} and the macro name.
+    private static final String CPP_ANNOTATION_REGEX = "^[+-]?\\s*#\\s*(?<directive>if|ifdef|ifndef|elif|elifdef|elifndef|else|endif)(?<formula>[\\s(].*)?$";
     private static final Pattern CPP_ANNOTATION_PATTERN = Pattern.compile(CPP_ANNOTATION_REGEX);
 
-    /**
-     * Extracts and parses the feature formula from a macro line (possibly within a diff).
-     *
-     * @param line The line of which to get the feature mapping
-     * @return The feature mapping
-     */
-    @Override
-    public Node extractFormula(final String line) throws UnparseableFormulaException {
-        // Match the formula from the macro line
-        final Matcher matcher = CPP_ANNOTATION_PATTERN.matcher(line);
-        if (!matcher.find()) {
-            throw new UnparseableFormulaException("Could not extract formula from line \"" + line + "\".");
-        }
-        String annotationType = matcher.group(1);
-        String formula = matcher.group(2);
+    public CPPAnnotationParser() {
+        super(CPP_ANNOTATION_PATTERN);
+    }
 
-        // abstract complex formulas (e.g., if they contain arithmetics or macro calls)
+    @Override
+    public Node parseFormula(final String directive, final String formula) throws UnparseableFormulaException {
         Node parsedFormula;
         try {
             CExpressionLexer lexer = new CExpressionLexer(CharStreams.fromString(formula));
@@ -65,16 +55,16 @@ public class CPPDiffLineFormulaExtractor implements DiffLineFormulaExtractor {
 
         // treat {@code #ifdef id}, {@code #ifndef id}, {@code #elifdef id} and {@code #elifndef id}
         // like {@code defined(id)} and {@code !defined(id)}
-        if (annotationType.endsWith("def")) {
+        if (directive.endsWith("def")) {
             if (parsedFormula instanceof Literal literal) {
                 literal.var = String.format("defined(%s)", literal.var);
 
                 // negate for ifndef
-                if (annotationType.endsWith("ndef")) {
+                if (directive.endsWith("ndef")) {
                     literal.positive = false;
                 }
             } else {
-                throw new UnparseableFormulaException("When using #ifdef, #ifndef, #elifdef or #elifndef, only literals are allowed. Hence, \"" + line + "\" is disallowed.");
+                throw new UnparseableFormulaException("When using #ifdef, #ifndef, #elifdef or #elifndef, only literals are allowed. Hence, \"" + formula + "\" is disallowed.");
             }
         }
 

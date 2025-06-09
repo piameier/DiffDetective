@@ -1,14 +1,19 @@
 package org.variantsync.diffdetective.datasets;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.tinylog.Logger;
 import org.variantsync.diffdetective.diff.git.DiffFilter;
 import org.variantsync.diffdetective.load.GitLoader;
 import org.variantsync.diffdetective.util.IO;
 import org.variantsync.functjonal.Lazy;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.Optional;
 
 /**
@@ -232,6 +237,26 @@ public class Repository {
 	 */
 	public void preload() {
 		getGitRepo();
+	}
+
+	/**
+	 * Returns a single commit from the repository.
+	 * Note that this commit may not be part of {@link #getCommits}.
+	 */
+	public RevCommit getCommit(String commitHash) throws IOException {
+		return getGitRepo().getRepository().parseCommit(ObjectId.fromString(commitHash));
+	}
+
+	/**
+	 * Returns all commits in the repository's history.
+	 */
+	public Iterator<RevCommit> getCommits() {
+		try {
+			return getGitRepo().log().call().iterator();
+		} catch (GitAPIException e) {
+			Logger.warn("Could not get log for git repository {}", getRepositoryName());
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**

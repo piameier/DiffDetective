@@ -440,11 +440,9 @@ public class VariationDiffParser {
 
         final CommitDiff commitDiff =
                 GitDiffer.createCommitDiff(
-                                git,
-                                repo.getDiffFilter(),
+                                repo,
                                 parentCommit,
-                                childCommit,
-                                repo.getParseOptions())
+                                childCommit)
                         .diff().orElseThrow();
 
         revWalk.close();

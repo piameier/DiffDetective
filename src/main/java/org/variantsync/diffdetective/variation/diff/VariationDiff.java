@@ -134,7 +134,7 @@ public class VariationDiff<L extends Label> {
      * encountered while trying to parse the {@link VariationDiff}
      */
     public static Result<VariationDiff<DiffLinesLabel>, List<DiffError>> fromPatch(final PatchReference patchReference, final Repository repository) throws IOException {
-        final CommitDiffResult result = new GitDiffer(repository).createCommitDiff(patchReference.getCommitHash());
+        final CommitDiffResult result = GitDiffer.createCommitDiffFromFirstParent(repository, patchReference.getCommitHash());
         final Path changedFile = Path.of(patchReference.getFileName());
         if (result.diff().isPresent()) {
             final CommitDiff commit = result.diff().get();

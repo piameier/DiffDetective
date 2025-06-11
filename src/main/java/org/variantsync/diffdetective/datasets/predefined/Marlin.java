@@ -2,20 +2,19 @@ package org.variantsync.diffdetective.datasets.predefined;
 
 import org.variantsync.diffdetective.datasets.PatchDiffParseOptions;
 import org.variantsync.diffdetective.datasets.Repository;
-import org.variantsync.diffdetective.feature.PreprocessorAnnotationParser;
+import org.variantsync.diffdetective.feature.AnnotationParser;
+import org.variantsync.diffdetective.feature.cpp.CPPAnnotationParser;
 
 import java.nio.file.Path;
 
 /**
  * Default repository for Marlin.
  *
- * @author Kevin Jedelhauser, Paul Maximilian Bittner
+ * @author Kevin Jedelhauser, Paul Maximilian Bittner, Benjamin Moosherr
  */
 public class Marlin {
-    public static final PreprocessorAnnotationParser ANNOTATION_PARSER =
-            PreprocessorAnnotationParser.CreateCppAnnotationParser(
-                    new MarlinCPPDiffLineFormulaExtractor()
-            );
+    public static final AnnotationParser ANNOTATION_PARSER =
+            new CPPAnnotationParser(new MarlinControllingCExpressionVisitor());
 
     /**
      * Clones Marlin from Github.

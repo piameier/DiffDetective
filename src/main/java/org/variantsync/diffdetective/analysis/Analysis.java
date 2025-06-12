@@ -325,8 +325,8 @@ public class Analysis {
 
         final double runtime = clock.getPassedSeconds();
         Logger.info("<<< done in {}", Clock.printPassedSeconds(runtime));
-        
-        result.get(TotalNumberOfCommitsResult.KEY).value++;
+
+        result.get(TotalNumberOfCommitsResult.KEY).value = 1;
 
         exportMetadata(analysis.getOutputDir(), result);
         return result;
@@ -448,7 +448,7 @@ public class Analysis {
         Logger.info("<<< done in {}", Clock.printPassedSeconds(runtime));
 
         analysis.getResult().get(RuntimeWithMultithreadingResult.KEY).value = runtime;
-//        analysis.getResult().get(TotalNumberOfCommitsResult.KEY).value = numberOfTotalCommits.invocationCount().get();
+        analysis.getResult().get(TotalNumberOfCommitsResult.KEY).value = numberOfTotalCommits.invocationCount().get();
 
         exportMetadata(analysis.getOutputDir(), analysis.getResult());
         return analysis.getResult();
@@ -561,8 +561,6 @@ public class Analysis {
                 runReverseHook(patchHook, Hooks::endPatch);
             }
         }
-        
-        getResult().get(TotalNumberOfCommitsResult.KEY).value++;
     }
 
     protected void processPatch() throws Exception {

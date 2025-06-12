@@ -4,9 +4,11 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.variantsync.diffdetective.variation.diff.Time;
+import org.variantsync.functjonal.iteration.Yield;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -26,6 +28,19 @@ public class DiffFilter {
             .allowAllChangeTypes()
             .allowAllFileExtensions()
             .build();
+
+    /**
+     * Default value for diff filters.
+     * It disallows merge commits, only considers patches that modified files,
+     * and only allows source files of C/C++ projects ("h", "hpp", "c", "cpp").
+     */
+    public static final DiffFilter DEFAULT_DIFF_FILTER =
+            new DiffFilter.Builder()
+                    .allowMerge(false)
+                    .allowCommitsWithoutParents(false)
+                    .allowedChangeTypes(DiffEntry.ChangeType.MODIFY)
+                    .allowedFileExtensions("h", "hpp", "c", "cpp")
+                    .build();
 
     /**
      * A list of allowed file extensions for patches.
@@ -315,6 +330,31 @@ public class DiffFilter {
                         // no parents
                         && (this.allowCommitsWithoutParents || commit.getParentCount() > 0)
                 ;
+    }
+
+    /**
+     * Filters all undesired commits from the given list of commits.
+     * @param commitsIterator Commits to filter.
+     * @return All commits from the given set that should not be filtered out.
+     */
+    public Iterator<RevCommit> filter(final Iterator<RevCommit> commitsIterator) {
+        return new Yield<>(
+                () -> {
+                    while (commitsIterator.hasNext()) {
+                        final RevCommit c = commitsIterator.next();
+                        // If this commit is filtered, go to the next one.
+                        // filter returns true if we want to include the commit
+                        // so if we do not want to filter it, we do not want to have it. Thus skip.
+                        if (!filter(c)) {
+                            continue;
+                        }
+
+                        return c;
+                    }
+
+                    return null;
+                }
+        );
     }
 
     private boolean isAllowedPath(String filename) {

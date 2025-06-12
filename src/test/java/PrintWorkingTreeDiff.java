@@ -29,14 +29,12 @@ public class PrintWorkingTreeDiff {
 		final Repository repository = Repository.fromZip(Paths.get(repo_path + ".zip"), repoName); // remove ".zip" when using fromDirectory()
 		repository.setParseOptions(repository.getParseOptions().withDiffStoragePolicy(DiffStoragePolicy.REMEMBER_FULL_DIFF));
 		
-		final GitDiffer differ = new GitDiffer(repository);
-		
 		// Retrieve latest commit
 		// Alternatively, replace with desired RevCommit
-		RevCommit latestCommit = differ.getJGitRepo().log().setMaxCount(1).call().iterator().next(); 
+		RevCommit latestCommit = repository.getGitRepo().log().setMaxCount(1).call().iterator().next();
 		
 		// Extract CommitDiff
-		CommitDiffResult commitDiffResult = GitDiffer.createWorkingTreeDiff(differ.getJGitRepo(), repository.getDiffFilter(), latestCommit, repository.getParseOptions());
+		CommitDiffResult commitDiffResult = GitDiffer.createWorkingTreeDiff(repository, latestCommit);
 		CommitDiff commitDiff = commitDiffResult.diff().orElseThrow();
 		
 		// Save diff output

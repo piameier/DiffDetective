@@ -23,7 +23,7 @@ import java.util.stream.Stream;
  * For testing the import of a line graph.
  */
 public class LineGraphTest {
-	private final static LineGraphImportOptions<DiffLinesLabel> IMPORT_OPTIONS = new LineGraphImportOptions<>(
+    private final static LineGraphImportOptions<DiffLinesLabel> IMPORT_OPTIONS = new LineGraphImportOptions<>(
             GraphFormat.VARIATION_DIFF,
             new CommitDiffVariationDiffLabelFormat(),
             new LabelOnlyDiffNodeFormat<>(),
@@ -67,15 +67,15 @@ public class LineGraphTest {
         }
     }
 
-	/**
-	 * Check consistency of {@link VariationDiff VariationDiffs}.
-	 * 
-	 * @param treeList {@link VariationDiff} list
-	 */
-	private static void assertConsistencyForAll(final List<VariationDiff<DiffLinesLabel>> treeList) {
+    /**
+     * Check consistency of {@link VariationDiff VariationDiffs}.
+     *
+     * @param treeList {@link VariationDiff} list
+     */
+    private static void assertConsistencyForAll(final List<VariationDiff<DiffLinesLabel>> treeList) {
 //        for (final VariationDiff t : treeList) {
 //            VariationDiffRenderer.WithinDiffDetective().render(t, t.getSource().toString(), Path.of("error"), PatchDiffRenderer.ErrorVariationDiffRenderOptions);
 //        }
-		treeList.forEach(VariationDiff::assertConsistency);
-	}
+        treeList.forEach(VariationDiff::assertConsistency);
+    }
 }

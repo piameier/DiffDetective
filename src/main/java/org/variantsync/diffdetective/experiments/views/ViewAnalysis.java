@@ -181,7 +181,7 @@ public class ViewAnalysis implements Analysis.Hooks {
 
         return relevances;
     }
-    
+
     /**
      * This is a convenience method for creating a random relevance predicate from a collection of
      * potential parameterisations.
@@ -254,7 +254,7 @@ public class ViewAnalysis implements Analysis.Hooks {
 
         return all;
     }
-    
+
     /**
      * Creates a random {@link Configure} relevance predicate from the given list of
      * deselected presence conditions.
@@ -297,7 +297,7 @@ public class ViewAnalysis implements Analysis.Hooks {
 
         return new Configure(winner);
     }
-    
+
     /**
      * Generates a {@link Trace} relevance predicate for each feature in the given set of feature names.
      * @param features A set of feature names to trace.

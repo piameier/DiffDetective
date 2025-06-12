@@ -17,269 +17,269 @@ import java.util.Optional;
 
 /**
  * Representation of git repositories used as datasets for DiffDetective.
- * 
+ *
  * @author Kevin Jedelhauser, Paul Maximilian Bittner
  */
 public class Repository {
     public static final Path DIFFDETECTIVE_DEFAULT_REPOSITORIES_DIRECTORY = Path.of("repositories");
 
     /**
-	 * The location from where the input repository is read from.
-	 */
-	private final RepositoryLocationType repoLocation;
-	
-	/**
-	 * The local path where the repository can be found or should be cloned to.
-	 */
-	private final Path localPath;
+     * The location from where the input repository is read from.
+     */
+    private final RepositoryLocationType repoLocation;
 
-	/**
-	 * The remote url of the repository. May be <code>null</code> if local.
-	 */
-	private final URI remote;
+    /**
+     * The local path where the repository can be found or should be cloned to.
+     */
+    private final Path localPath;
 
-	/**
-	 * The name of the repository. Used for debugging.
-	 */
-	private final String repositoryName;
+    /**
+     * The remote url of the repository. May be <code>null</code> if local.
+     */
+    private final URI remote;
 
-	/**
-	 * A function that extracts the list of commits that are represented by this repository instance.
-	 */
-	private CommitLister commitLister;
+    /**
+     * The name of the repository. Used for debugging.
+     */
+    private final String repositoryName;
 
-	/**
-	 * Filter determining which files and commits to consider for diffs.
-	 */
-	private DiffFilter diffFilter;
+    /**
+     * A function that extracts the list of commits that are represented by this repository instance.
+     */
+    private CommitLister commitLister;
+
+    /**
+     * Filter determining which files and commits to consider for diffs.
+     */
+    private DiffFilter diffFilter;
 
     /**
      * Options to configure parsing and memory consumption (e.g., by not keeping full diffs in memory).
      */
-	private PatchDiffParseOptions parseOptions;
+    private PatchDiffParseOptions parseOptions;
 
-	private final Lazy<Git> git = Lazy.of(this::load);
+    private final Lazy<Git> git = Lazy.of(this::load);
 
-	/**
-	 * Creates a repository.
-	 * 
-	 * @param repoLocation {@link RepositoryLocationType} From which location the repository is read from
-	 * @param localPath The local path where the repository can be found or should be cloned to.
-	 * @param remote The remote url of the repository. May be <code>null</code> if local.
-	 * @param repositoryName Name of the cloned repository (<code>null</code> if local)
-	 * @param commitLister extracts the commits from {@link #getGitRepo()} that should be represented.
-	 * @param parseOptions Omit some debug data to save RAM.
-	 * @param diffFilter Filter determining which files and commits to consider for diffs.
-	 */
-	public Repository(
-			final RepositoryLocationType repoLocation,
-			final Path localPath,
-			final URI remote,
-			final String repositoryName,
-			final CommitLister commitLister,
-			final PatchDiffParseOptions parseOptions,
-			final DiffFilter diffFilter) {
-		this.repoLocation = repoLocation;
-		this.localPath = localPath;
-		this.remote = remote;
-		this.repositoryName = repositoryName;
-		this.commitLister = commitLister;
-		this.parseOptions = parseOptions;
-		this.diffFilter = diffFilter;
-	}
+    /**
+     * Creates a repository.
+     *
+     * @param repoLocation {@link RepositoryLocationType} From which location the repository is read from
+     * @param localPath The local path where the repository can be found or should be cloned to.
+     * @param remote The remote url of the repository. May be <code>null</code> if local.
+     * @param repositoryName Name of the cloned repository (<code>null</code> if local)
+     * @param commitLister extracts the commits from {@link #getGitRepo()} that should be represented.
+     * @param parseOptions Omit some debug data to save RAM.
+     * @param diffFilter Filter determining which files and commits to consider for diffs.
+     */
+    public Repository(
+            final RepositoryLocationType repoLocation,
+            final Path localPath,
+            final URI remote,
+            final String repositoryName,
+            final CommitLister commitLister,
+            final PatchDiffParseOptions parseOptions,
+            final DiffFilter diffFilter) {
+        this.repoLocation = repoLocation;
+        this.localPath = localPath;
+        this.remote = remote;
+        this.repositoryName = repositoryName;
+        this.commitLister = commitLister;
+        this.parseOptions = parseOptions;
+        this.diffFilter = diffFilter;
+    }
 
-	/**
-	 * Creates repository of the given source and with all other settings set to default values.
-	 * @see Repository
-	 * <p>
-	 * Defaults to {@link CommitLister#TraverseHEAD}, {@link PatchDiffParseOptions#Default} and {@link DiffFilter#ALLOW_ALL}.
-	 */
-	public Repository(
-			final RepositoryLocationType repoLocation,
-			final Path localPath,
-			final URI remote,
-			final String repositoryName) {
-		this(
-			repoLocation,
-			localPath,
-			remote,
-			repositoryName,
-			CommitLister.TraverseHEAD,
-			PatchDiffParseOptions.Default,
-			DiffFilter.ALLOW_ALL
-		);
-	}
+    /**
+     * Creates repository of the given source and with all other settings set to default values.
+     * @see Repository
+     * <p>
+     * Defaults to {@link CommitLister#TraverseHEAD}, {@link PatchDiffParseOptions#Default} and {@link DiffFilter#ALLOW_ALL}.
+     */
+    public Repository(
+            final RepositoryLocationType repoLocation,
+            final Path localPath,
+            final URI remote,
+            final String repositoryName) {
+        this(
+            repoLocation,
+            localPath,
+            remote,
+            repositoryName,
+            CommitLister.TraverseHEAD,
+            PatchDiffParseOptions.Default,
+            DiffFilter.ALLOW_ALL
+        );
+    }
 
-	/**
-	 * Creates a repository from an existing directory.
-	 * 
-	 * @param dirPath The path to the repo directory relative to {@code <WORKING_DIRECTORY>/repositories}
-	 * @param repoName A name for the repository (currently not used)
-	 * @return A repository from an existing directory
-	 */
-	public static Repository fromDirectory(Path dirPath, String repoName) {
-		return new Repository(
-				RepositoryLocationType.FROM_DIR,
-				dirPath,
-				null,
-				repoName);
-	}
-	
-	/**
-	 * Creates a repository from a local zip file.
-	 * 
-	 * @param filePath The path to the zip file (absolute or relative to {@code <WORKING_DIRECTORY>}).
-	 * @param repoName A name for the repository (currently not used)
-	 * @return A repository from a local zip file
-	 */
-	public static Repository fromZip(Path filePath, String repoName) {
-		return new Repository(
-				RepositoryLocationType.FROM_ZIP,
-				filePath,
-				null,
-				repoName);
-	}
+    /**
+     * Creates a repository from an existing directory.
+     *
+     * @param dirPath The path to the repo directory relative to {@code <WORKING_DIRECTORY>/repositories}
+     * @param repoName A name for the repository (currently not used)
+     * @return A repository from an existing directory
+     */
+    public static Repository fromDirectory(Path dirPath, String repoName) {
+        return new Repository(
+                RepositoryLocationType.FROM_DIR,
+                dirPath,
+                null,
+                repoName);
+    }
 
-	/**
-	 * Creates a repository from a remote repository.
-	 *
-	 * @param localPath Path to clone the repository to.
-	 * @param repoUri The address of the remote repository
-	 * @param repoName Name of the folder, where the git repository is cloned to
-	 * @return A repository from a remote location (e.g. Github repository)
-	 */
-	public static Repository fromRemote(Path localPath, URI repoUri, String repoName) {
-		return new Repository(
-				RepositoryLocationType.FROM_REMOTE,
-				localPath,
-				repoUri,
-				repoName);
-	}
+    /**
+     * Creates a repository from a local zip file.
+     *
+     * @param filePath The path to the zip file (absolute or relative to {@code <WORKING_DIRECTORY>}).
+     * @param repoName A name for the repository (currently not used)
+     * @return A repository from a local zip file
+     */
+    public static Repository fromZip(Path filePath, String repoName) {
+        return new Repository(
+                RepositoryLocationType.FROM_ZIP,
+                filePath,
+                null,
+                repoName);
+    }
 
-	/**
-	 * Creates a repository from a remote repository.
-	 *
-	 * @param localDir Directory to clone the repository to.
-	 * @param repoUri The address of the remote repository
-	 * @param repoName Name of the folder, where the git repository is cloned to
-	 * @return A repository from a remote location (e.g. Github repository)
-	 */
-	public static Optional<Repository> tryFromRemote(Path localDir, String repoUri, String repoName) {
-		return IO
-				.tryParseURI(repoUri)
-				.map(remote -> fromRemote(localDir.resolve(repoName), remote, repoName));
-	}
+    /**
+     * Creates a repository from a remote repository.
+     *
+     * @param localPath Path to clone the repository to.
+     * @param repoUri The address of the remote repository
+     * @param repoName Name of the folder, where the git repository is cloned to
+     * @return A repository from a remote location (e.g. Github repository)
+     */
+    public static Repository fromRemote(Path localPath, URI repoUri, String repoName) {
+        return new Repository(
+                RepositoryLocationType.FROM_REMOTE,
+                localPath,
+                repoUri,
+                repoName);
+    }
 
-	/**
-	 * @return the location type indicating how this repository is stored.
-	 */
-	public RepositoryLocationType getRepoLocation() {
-		return repoLocation;
-	}
+    /**
+     * Creates a repository from a remote repository.
+     *
+     * @param localDir Directory to clone the repository to.
+     * @param repoUri The address of the remote repository
+     * @param repoName Name of the folder, where the git repository is cloned to
+     * @return A repository from a remote location (e.g. Github repository)
+     */
+    public static Optional<Repository> tryFromRemote(Path localDir, String repoUri, String repoName) {
+        return IO
+                .tryParseURI(repoUri)
+                .map(remote -> fromRemote(localDir.resolve(repoName), remote, repoName));
+    }
 
-	/**
-	 * The path to the repository on disk.
-	 * The path points to the root directory of the repository if the repository is stored in a directory.
-	 * The path points to a zip file if the repository is stored in a zip file.
-	 * The path points to a (possibly not existing) directory to which the repository should be cloned to if the
-	 * repository is stored on a remote server.
-	 * @see Repository#getRepoLocation()
-	 * @see RepositoryLocationType
-	 * @return The path to the repository on disk.
-	 */
-	public Path getLocalPath() {
-		return localPath;
-	}
+    /**
+     * @return the location type indicating how this repository is stored.
+     */
+    public RepositoryLocationType getRepoLocation() {
+        return repoLocation;
+    }
 
-	/**
-	 * URI of the origin of this repository (i.e., usually the location on a server where this repository was cloned from).
-	 */
-	public URI getRemoteURI() {
-		return remote;
-	}
+    /**
+     * The path to the repository on disk.
+     * The path points to the root directory of the repository if the repository is stored in a directory.
+     * The path points to a zip file if the repository is stored in a zip file.
+     * The path points to a (possibly not existing) directory to which the repository should be cloned to if the
+     * repository is stored on a remote server.
+     * @see Repository#getRepoLocation()
+     * @see RepositoryLocationType
+     * @return The path to the repository on disk.
+     */
+    public Path getLocalPath() {
+        return localPath;
+    }
 
-	/**
-	 * The name of this repository. Should be unique.
-	 */
-	public String getRepositoryName() {
-		return repositoryName;
-	}
+    /**
+     * URI of the origin of this repository (i.e., usually the location on a server where this repository was cloned from).
+     */
+    public URI getRemoteURI() {
+        return remote;
+    }
 
-	/**
-	 * Set options for parsing parts of this repository's evolution history.
-	 * @param parseOptions Options for parsing the evolution history.
-	 * @return this
-	 */
-	public Repository setParseOptions(PatchDiffParseOptions parseOptions) {
-		this.parseOptions = parseOptions;
+    /**
+     * The name of this repository. Should be unique.
+     */
+    public String getRepositoryName() {
+        return repositoryName;
+    }
+
+    /**
+     * Set options for parsing parts of this repository's evolution history.
+     * @param parseOptions Options for parsing the evolution history.
+     * @return this
+     */
+    public Repository setParseOptions(PatchDiffParseOptions parseOptions) {
+        this.parseOptions = parseOptions;
         return this;
-	}
+    }
 
-	/**
-	 * Set the diff filter for reading this repository.
-	 * The diff filter decides which commits and files should be considered for analyses.
-	 * @param filter Filter to apply when traversing this repository's commit history.
-	 * @return this
-	 */
-	public Repository setDiffFilter(final DiffFilter filter) {
-		this.diffFilter = filter;
+    /**
+     * Set the diff filter for reading this repository.
+     * The diff filter decides which commits and files should be considered for analyses.
+     * @param filter Filter to apply when traversing this repository's commit history.
+     * @return this
+     */
+    public Repository setDiffFilter(final DiffFilter filter) {
+        this.diffFilter = filter;
         return this;
-	}
+    }
 
-	/**
-	 * The diff filter decides which commits and files should be considered for analyses.
-	 */
-	public DiffFilter getDiffFilter() {
-		return diffFilter;
-	}
+    /**
+     * The diff filter decides which commits and files should be considered for analyses.
+     */
+    public DiffFilter getDiffFilter() {
+        return diffFilter;
+    }
 
 
-	/**
-	 * Options that should be used when parsing the evolution history.
-	 */
-	public PatchDiffParseOptions getParseOptions() {
-		return parseOptions;
-	}
+    /**
+     * Options that should be used when parsing the evolution history.
+     */
+    public PatchDiffParseOptions getParseOptions() {
+        return parseOptions;
+    }
 
-	/**
-	 * Returns the internal jgit representation of this repository that allows to inspect the repositories history and content.
-	 */
-	public Git getGitRepo() {
-		return git.run();
-	}
+    /**
+     * Returns the internal jgit representation of this repository that allows to inspect the repositories history and content.
+     */
+    public Git getGitRepo() {
+        return git.run();
+    }
 
-	/**
-	 * Prepares the Git repository (e.g., clones it if necessary).
-	 */
-	public void preload() {
-		getGitRepo();
-	}
+    /**
+     * Prepares the Git repository (e.g., clones it if necessary).
+     */
+    public void preload() {
+        getGitRepo();
+    }
 
-	/**
-	 * Returns a single commit from the repository.
-	 * Note that this commit may not be part of {@link #getCommits}.
-	 */
-	public RevCommit getCommit(String commitHash) throws IOException {
-		return getGitRepo().getRepository().parseCommit(ObjectId.fromString(commitHash));
-	}
+    /**
+     * Returns a single commit from the repository.
+     * Note that this commit may not be part of {@link #getCommits}.
+     */
+    public RevCommit getCommit(String commitHash) throws IOException {
+        return getGitRepo().getRepository().parseCommit(ObjectId.fromString(commitHash));
+    }
 
-	/**
-	 * Returns all commits in the repository's history.
-	 */
-	public Iterator<RevCommit> getCommits() {
-		return commitLister.listCommits(this);
-	}
+    /**
+     * Returns all commits in the repository's history.
+     */
+    public Iterator<RevCommit> getCommits() {
+        return commitLister.listCommits(this);
+    }
 
-	/**
-	 * Loads this repository and returns a jgit representation to access it.
-	 */
-	private Git load() {
-		Logger.info("Loading git at {} ...", getLocalPath());
-		return switch (getRepoLocation()) {
-			case FROM_DIR -> GitLoader.fromDirectory(getLocalPath());
-			case FROM_ZIP -> GitLoader.fromZip(getLocalPath());
-			case FROM_REMOTE -> GitLoader.fromRemote(getLocalPath(), getRemoteURI());
-			default -> throw new UnsupportedOperationException("Unknown git repo source");
-		};
-	}
+    /**
+     * Loads this repository and returns a jgit representation to access it.
+     */
+    private Git load() {
+        Logger.info("Loading git at {} ...", getLocalPath());
+        return switch (getRepoLocation()) {
+            case FROM_DIR -> GitLoader.fromDirectory(getLocalPath());
+            case FROM_ZIP -> GitLoader.fromZip(getLocalPath());
+            case FROM_REMOTE -> GitLoader.fromRemote(getLocalPath(), getRemoteURI());
+            default -> throw new UnsupportedOperationException("Unknown git repo source");
+        };
+    }
 }

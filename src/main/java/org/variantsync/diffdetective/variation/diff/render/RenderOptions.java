@@ -34,197 +34,197 @@ import java.util.List;
  * @author Paul Bittner, Kevin Jedelhauser
  */
 public record RenderOptions<L extends Label>(
-		GraphFormat format,
-		VariationDiffLabelFormat treeFormat,
-		DiffNodeLabelFormat<? super L> nodeFormat,
-		EdgeLabelFormat<? super L> edgeFormat,
-		boolean cleanUpTemporaryFiles,
-		int dpi,
-		int nodesize,
-		double edgesize,
-		int arrowsize,
-		int fontsize,
-		boolean withlabels,
-		List<String> extraArguments)
+        GraphFormat format,
+        VariationDiffLabelFormat treeFormat,
+        DiffNodeLabelFormat<? super L> nodeFormat,
+        EdgeLabelFormat<? super L> edgeFormat,
+        boolean cleanUpTemporaryFiles,
+        int dpi,
+        int nodesize,
+        double edgesize,
+        int arrowsize,
+        int fontsize,
+        boolean withlabels,
+        List<String> extraArguments)
 {
-	/**
-	 * Default options.
-	 */
-	public static <L extends Label> RenderOptions<L> DEFAULT() {
-		return new Builder<L>().build();
-	}
+    /**
+     * Default options.
+     */
+    public static <L extends Label> RenderOptions<L> DEFAULT() {
+        return new Builder<L>().build();
+    }
 
-	/**
-	 * Builder for {@link RenderOptions}.
-	 */
-	public static class Builder<L extends Label> {
-		private GraphFormat format;
-		private VariationDiffLabelFormat treeParser;
-		private DiffNodeLabelFormat<? super L> nodeParser;
-		private EdgeLabelFormat<? super L> edgeParser;
-		private boolean cleanUpTemporaryFiles;
-		private int dpi;
-		private int nodesize;
-		private double edgesize;
-		private int arrowsize;
-		private int fontsize;
-		private boolean withlabels;
-		private List<String> extraArguments;
+    /**
+     * Builder for {@link RenderOptions}.
+     */
+    public static class Builder<L extends Label> {
+        private GraphFormat format;
+        private VariationDiffLabelFormat treeParser;
+        private DiffNodeLabelFormat<? super L> nodeParser;
+        private EdgeLabelFormat<? super L> edgeParser;
+        private boolean cleanUpTemporaryFiles;
+        private int dpi;
+        private int nodesize;
+        private double edgesize;
+        private int arrowsize;
+        private int fontsize;
+        private boolean withlabels;
+        private List<String> extraArguments;
 
-		/**
-		 * Creates a new builder with the default options for {@link RenderOptions}.
-		 */
-		public Builder() {
-			format = GraphFormat.VARIATION_DIFF;
-			treeParser = new CommitDiffVariationDiffLabelFormat();
-			nodeParser = new DebugDiffNodeFormat<>();
-			edgeParser = new DefaultEdgeLabelFormat<>();
-			cleanUpTemporaryFiles = true;
-			dpi = 300;
-			nodesize = 700;
-			edgesize = 1.2;
-			arrowsize = 15;
-			fontsize = 5;
-			withlabels = true;
-			extraArguments = new ArrayList<>();
-		}
-		
-		/**
-		 * Complete the creation of {@link RenderOptions}.
-		 * 
-		 * @return {@link RenderOptions} with this builder's configured settings.
-		 */
-		public RenderOptions<L> build() {
-			return new RenderOptions<>(
-					format, 
-					treeParser, 
-					nodeParser, 
-					edgeParser, 
-					cleanUpTemporaryFiles, 
-					dpi, 
-					nodesize, 
-					edgesize, 
-					arrowsize, 
-					fontsize, 
-					withlabels, 
-					extraArguments);
-		}
+        /**
+         * Creates a new builder with the default options for {@link RenderOptions}.
+         */
+        public Builder() {
+            format = GraphFormat.VARIATION_DIFF;
+            treeParser = new CommitDiffVariationDiffLabelFormat();
+            nodeParser = new DebugDiffNodeFormat<>();
+            edgeParser = new DefaultEdgeLabelFormat<>();
+            cleanUpTemporaryFiles = true;
+            dpi = 300;
+            nodesize = 700;
+            edgesize = 1.2;
+            arrowsize = 15;
+            fontsize = 5;
+            withlabels = true;
+            extraArguments = new ArrayList<>();
+        }
 
-		/**
-		 * @see RenderOptions#format
-		 */
-		public Builder<L> setGraphFormat(GraphFormat format) {
-			this.format = format;
-			return this;
-		}
+        /**
+         * Complete the creation of {@link RenderOptions}.
+         *
+         * @return {@link RenderOptions} with this builder's configured settings.
+         */
+        public RenderOptions<L> build() {
+            return new RenderOptions<>(
+                    format,
+                    treeParser,
+                    nodeParser,
+                    edgeParser,
+                    cleanUpTemporaryFiles,
+                    dpi,
+                    nodesize,
+                    edgesize,
+                    arrowsize,
+                    fontsize,
+                    withlabels,
+                    extraArguments);
+        }
 
-		/**
-		 * @see RenderOptions#treeFormat
-		 */
-		public Builder<L> setTreeFormat(VariationDiffLabelFormat treeFormat) {
-			this.treeParser = treeFormat;
-			return this;
-		}
+        /**
+         * @see RenderOptions#format
+         */
+        public Builder<L> setGraphFormat(GraphFormat format) {
+            this.format = format;
+            return this;
+        }
 
-		/**
-		 * @see RenderOptions#nodeFormat
-		 */
-		public Builder<L> setNodeFormat(DiffNodeLabelFormat<? super L> nodeFormat) {
-			this.nodeParser = nodeFormat;
-			return this;
-		}
+        /**
+         * @see RenderOptions#treeFormat
+         */
+        public Builder<L> setTreeFormat(VariationDiffLabelFormat treeFormat) {
+            this.treeParser = treeFormat;
+            return this;
+        }
 
-		/**
-		 * @see RenderOptions#edgeFormat
-		 */
-		public Builder<L> setEdgeFormat(EdgeLabelFormat<? super L> edgeFormat) {
-			this.edgeParser = edgeFormat;
-			return this;
-		}
+        /**
+         * @see RenderOptions#nodeFormat
+         */
+        public Builder<L> setNodeFormat(DiffNodeLabelFormat<? super L> nodeFormat) {
+            this.nodeParser = nodeFormat;
+            return this;
+        }
 
-		/**
-		 * @see RenderOptions#cleanUpTemporaryFiles
-		 */
-		public Builder<L> setCleanUpTemporaryFiles(boolean cleanUpTemporaryFiles) {
-			this.cleanUpTemporaryFiles = cleanUpTemporaryFiles;
-			return this;
-		}
+        /**
+         * @see RenderOptions#edgeFormat
+         */
+        public Builder<L> setEdgeFormat(EdgeLabelFormat<? super L> edgeFormat) {
+            this.edgeParser = edgeFormat;
+            return this;
+        }
 
-		/**
-		 * @see RenderOptions#dpi
-		 */
-		public Builder<L> setDpi(int dpi) {
-			this.dpi = dpi;
-			return this;
-		}
+        /**
+         * @see RenderOptions#cleanUpTemporaryFiles
+         */
+        public Builder<L> setCleanUpTemporaryFiles(boolean cleanUpTemporaryFiles) {
+            this.cleanUpTemporaryFiles = cleanUpTemporaryFiles;
+            return this;
+        }
 
-		/**
-		 * @see RenderOptions#nodesize
-		 */
-		public Builder<L> setNodesize(int nodesize) {
-			this.nodesize = nodesize;
-			return this;
-		}
+        /**
+         * @see RenderOptions#dpi
+         */
+        public Builder<L> setDpi(int dpi) {
+            this.dpi = dpi;
+            return this;
+        }
 
-		/**
-		 * @see RenderOptions#edgesize
-		 */
-		public Builder<L> setEdgesize(double edgesize) {
-			this.edgesize = edgesize;
-			return this;
-		}
+        /**
+         * @see RenderOptions#nodesize
+         */
+        public Builder<L> setNodesize(int nodesize) {
+            this.nodesize = nodesize;
+            return this;
+        }
 
-		/**
-		 * @see RenderOptions#arrowsize
-		 */
-		public Builder<L> setArrowsize(int arrowsize) {
-			this.arrowsize = arrowsize;
-			return this;
-		}
+        /**
+         * @see RenderOptions#edgesize
+         */
+        public Builder<L> setEdgesize(double edgesize) {
+            this.edgesize = edgesize;
+            return this;
+        }
 
-		/**
-		 * @see RenderOptions#fontsize
-		 */
-		public Builder<L> setFontsize(int fontsize) {
-			this.fontsize = fontsize;
-			return this;
-		}
+        /**
+         * @see RenderOptions#arrowsize
+         */
+        public Builder<L> setArrowsize(int arrowsize) {
+            this.arrowsize = arrowsize;
+            return this;
+        }
 
-		/**
-		 * @see RenderOptions#withlabels
-		 */
-		public Builder<L> setWithlabels(boolean withlabels) {
-			this.withlabels = withlabels;
-			return this;
-		}
+        /**
+         * @see RenderOptions#fontsize
+         */
+        public Builder<L> setFontsize(int fontsize) {
+            this.fontsize = fontsize;
+            return this;
+        }
 
-		/**
-		 * Resets the extra arguments to the given list.
-		 * @see RenderOptions#extraArguments
-		 */
-		public Builder<L> setExtraArguments(List<String> extraArguments) {
-			this.extraArguments = new ArrayList<>(extraArguments);
-			return this;
-		}
+        /**
+         * @see RenderOptions#withlabels
+         */
+        public Builder<L> setWithlabels(boolean withlabels) {
+            this.withlabels = withlabels;
+            return this;
+        }
 
-		/**
-		 * Adds further arguments to the already set extra arguments.
-		 * @see RenderOptions#extraArguments
-		 */
-		public Builder<L> addExtraArguments(String... args) {
-			// add new list arguments to already existing arguments
+        /**
+         * Resets the extra arguments to the given list.
+         * @see RenderOptions#extraArguments
+         */
+        public Builder<L> setExtraArguments(List<String> extraArguments) {
+            this.extraArguments = new ArrayList<>(extraArguments);
+            return this;
+        }
+
+        /**
+         * Adds further arguments to the already set extra arguments.
+         * @see RenderOptions#extraArguments
+         */
+        public Builder<L> addExtraArguments(String... args) {
+            // add new list arguments to already existing arguments
             this.extraArguments.addAll(List.of(args));
-			return this;
-		}
+            return this;
+        }
 
-	}
+    }
 
-	/**
-	 * Converts this RenderOptions to options for linegraph export.
-	 * Linegraph options are a subset of render options.
-	 * @return Options for linegraph export consistent to this RenderOptions.
-	 */
-	public LineGraphExportOptions<L> toLineGraphOptions() {
-		return new LineGraphExportOptions<L>(format(), treeFormat(), nodeFormat(), edgeFormat());
-	}
+    /**
+     * Converts this RenderOptions to options for linegraph export.
+     * Linegraph options are a subset of render options.
+     * @return Options for linegraph export consistent to this RenderOptions.
+     */
+    public LineGraphExportOptions<L> toLineGraphOptions() {
+        return new LineGraphExportOptions<L>(format(), treeFormat(), nodeFormat(), edgeFormat());
+    }
 }

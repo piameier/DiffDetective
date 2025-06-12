@@ -13,13 +13,13 @@ import org.variantsync.diffdetective.variation.diff.DiffNode;
  */
 @FunctionalInterface
 public interface VariationDiffVisitor<L extends Label> {
-     /**
-      * Invoked by a traversal when a node is visited.
-      * The traversal might be continued by invoking respective methods on the given traversal object again.
-      * However, any node that was already visited, will not be visited again.
-      * @param traversal The current traversal. May be instructed on how to continue traversal.
-      * @param subtree The node that is currently visited.
-      * @see VariationDiffTraversal
-      */
-     void visit(final VariationDiffTraversal<L> traversal, final DiffNode<L> subtree);
+    /**
+     * Invoked by a traversal when a node is visited.
+     * The traversal might be continued by invoking respective methods on the given traversal object again.
+     * However, any node that was already visited, will not be visited again.
+     * @param traversal The current traversal. May be instructed on how to continue traversal.
+     * @param subtree The node that is currently visited.
+     * @see VariationDiffTraversal
+     */
+    void visit(final VariationDiffTraversal<L> traversal, final DiffNode<L> subtree);
 }

@@ -13,7 +13,7 @@ import java.util.function.Function;
  * TODO: Move this implementation to Functjonal.
  * @param <V> The type of the value to store (e.g., Integer when we want to count something).
  * @param <Derived> The type of the subclass that derives this class.
- * @author Paul Bittner 
+ * @author Paul Bittner
  */
 public abstract class SimpleMetadata<V, Derived extends SimpleMetadata<V, Derived>> implements Metadata<Derived> {
     public V value;

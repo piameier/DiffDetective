@@ -471,10 +471,10 @@ public class Analysis {
         this.hooks = hooks;
         this.repository = repository;
         this.outputDir = outputDir;
-        
+
         this.result = new AnalysisResult(repository.getRepositoryName());
         this.result.taskName = taskName;
-        
+
         for (var hook : hooks) {
             hook.initializeResults(this);
         }

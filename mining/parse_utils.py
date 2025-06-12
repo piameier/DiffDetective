@@ -182,8 +182,8 @@ def convert_node_link_graph_to_subdue_python_graph(input_file, output_file):
 
         # Add edge
         the_file.write(']\n')
-        
-        
+
+
 ########################### Line Graph Parsers/Serializers #####################################################
 # Export TLV (gSpan consumes TLV)
 def export_TLV(graph_db, path):
@@ -199,7 +199,7 @@ def export_TLV(graph_db, path):
                 label = "UNKNOWN_LABEL"
             else:
                 label = data['label']
-                
+
             f.write("v " + str(node) + " " + label + '\n')
         edges = temp_graph.edges(data=True)
         for source, target, data in edges:
@@ -213,14 +213,14 @@ def export_TLV(graph_db, path):
 
 def import_tlv_folder(folder_path, postfix='.lg', parse_support=True):
     '''
-    See import_tlv. Just iterates over the folder and concats. 
+    See import_tlv. Just iterates over the folder and concats.
     Doesn't take graph isomorphisms into account, i.e., isomorphic graphs in different files could appear as duplicates.
     '''
     if parse_support:
         graphs = {}
     else:
         graphs = []
-        
+
     for file in os.listdir(folder_path):
         if file.endswith(postfix):
             new_graphs = import_tlv(os.path.join(folder_path, file), parse_support)
@@ -234,7 +234,7 @@ def import_tlv(path, parse_support=True):
     '''
     Parses the given file as line graph and (optionally) parses the support of the graph. There are multiple different formats to obtain the support from.
     It returns a dictionary of graphs with their support or a list of all graphs if no support parsing is desired.
-    
+
     params: path, the path to the line graph file
             parse_support: true, if support should also be parsed
     returns:  a dictionary dict(DiGraph, int) with the graphs and their suppor, if parse_support=True, else a list of graphs
@@ -248,11 +248,11 @@ def import_tlv(path, parse_support=True):
     regex_header = r"t # (.*)"
     regex_node = r"v (\d+) (.+).*"
     regex_edge = r"e (\d+) (\d+) (.+).*"
-    
+
     # Some file formats give the support directly, others list all the embeddings. We support both options.
     regex_support = r"Support: (\d+).*"
     regex_embedding = r"#=> ([^\s]+) .*"
-    
+
     # if tlv header continue parsing
     match_header = re.match(regex_header, next_line)
     if match_header:
@@ -268,7 +268,7 @@ def import_tlv(path, parse_support=True):
         support = None
         match_header = None
 
-        
+
         while next_line and not match_header:
             match_node = re.match(regex_node, next_line)
             match_edge = re.match(regex_edge, next_line)
@@ -285,7 +285,7 @@ def import_tlv(path, parse_support=True):
             next_line = graph_db.readline()
             if next_line:
                 match_header = re.match(regex_header, next_line)
-        
+
         if support_set is not None:
             graph.graph['embeddings'] = str(support_set)
 

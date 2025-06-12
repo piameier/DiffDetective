@@ -48,7 +48,7 @@ public class DiffView {
 
         return (t, p) -> V.get(t).contains(p);
     }
-    
+
     /**
      * This method is not intended to be used directly and exists for optimization purposes only.
      * Instead, consider using {@link #naive(VariationDiff, Relevance)}.
@@ -81,7 +81,7 @@ public class DiffView {
 
         return view;
     }
-    
+
     /**
      * This method is not intended to be used directly and exists for optimization purposes only.
      * Instead, consider using {@link #naive(VariationDiff, Relevance)}.
@@ -92,7 +92,7 @@ public class DiffView {
      * the translation of the given relevance predicate to a relevance on a variation diff.
      * This additional parameter is assumed to be created from the given relevance predicate
      * in terms of {@link #computeWhenNodesAreRelevant(VariationDiff, Relevance)}.
-     * 
+     *
      * @param inView {@link #computeWhenNodesAreRelevant(VariationDiff, Relevance)} for the given variation diff d
      *                                                                        and relevance predicate rho.
      * @throws IOException When the text-based diffing fails because of an IO error.
@@ -137,7 +137,7 @@ public class DiffView {
     }
 
     /**
-     * An alternative algorithm for generating of views on variation diffs based on 
+     * An alternative algorithm for generating of views on variation diffs based on
      * (1) removing cycles in the variation diff,
      * (2) interpreting the resulting acyclic variation diff as a colored variation tree,
      * (3) creating a view on the variation tree,

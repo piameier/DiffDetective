@@ -27,7 +27,7 @@ stack run
 
 ## What Is There to See
 
-Our example executes a simple test. It 
+Our example executes a simple test. It
 1. constructs two variation trees (called `Kanto Starters` and `Johto Starters`) and prints them to terminal;
 2. diffs both trees to a variation tree diff using our [`naiveDiff`](src/VariationDiff.hs) function, which is described in our appendix, and prints the diff to terminal;
 3. creates both projections of the variation tree diff (before and after the edit) and prints both to terminal;

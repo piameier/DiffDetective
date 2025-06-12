@@ -7,9 +7,10 @@ mkdir -p "$output_base/temp/"
 # Run for every dataset in input folder
 for dataset in "$input_base"/*/ ; do
     dataset_name="$(basename "$dataset")"
-    subgraphs_file="$dataset/mining_no_duplicates/results_no_duplicates.lg" 
+    subgraphs_file="$dataset/mining_no_duplicates/results_no_duplicates.lg"
     if [ -e $subgraphs_file ]
-      then cp "$subgraphs_file" "$output_base/temp/$dataset_name.lg"
+    then
+        cp "$subgraphs_file" "$output_base/temp/$dataset_name.lg"
     fi
 done
 

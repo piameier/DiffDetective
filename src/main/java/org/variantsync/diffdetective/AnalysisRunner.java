@@ -61,7 +61,7 @@ public class AnalysisRunner {
          * Creates options with the given parameters and uses default
          * values for all other parameters.
          * @see Options#Options(Path, Path, Path, Function, Function, boolean, boolean)
-         * @see Options#DEFAULT(String[]) 
+         * @see Options#DEFAULT(String[])
          */
         public Options(Path repositoriesDirectory,
                        Path outputDirectory,
@@ -73,7 +73,7 @@ public class AnalysisRunner {
                     true,
                     false);
         }
-        
+
         public static Options DEFAULT(final String[] args) {
             final Path datasetsFile;
             if (args.length < 1) {

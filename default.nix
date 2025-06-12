@@ -122,6 +122,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
       if buildGitHubPages
       then ''
         mvn javadoc:javadoc
+        mv target/reports/apidocs docs/javadoc
         JEKYLL_ENV=production PAGES_REPO_NWO=VariantSync/DiffDetective JEKYLL_BUILD_REVISION= PAGES_DISABLE_NETWORK=1 github-pages build
         rm -rf _site/target
       ''

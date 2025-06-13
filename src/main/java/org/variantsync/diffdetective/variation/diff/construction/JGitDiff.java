@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  */
 public final class JGitDiff {
     private final static Pattern NO_NEWLINE_AT_END_OF_FILE = Pattern.compile("\n\\\\ No newline at end of file");
-    
+
     private JGitDiff() {}
 
     /**
@@ -47,7 +47,7 @@ public final class JGitDiff {
             return textDiff(IOUtils.toString(b), IOUtils.toString(a), algorithm);
         }
     }
-    
+
     /**
      * Creates a text-based diff from two line-based text inputs.
      * Uses JGit to diff the two files using the specified {@code options}.
@@ -112,10 +112,10 @@ public final class JGitDiff {
 
         textDiff = NO_NEWLINE_AT_END_OF_FILE.matcher(textDiff).replaceAll("");
         //textDiff = HUNK_HEADER_REGEX.matcher(textDiff).replaceAll("");
-        
+
         return textDiff;
     }
-    
+
     /**
      * Creates a variation diff from to line-based text inputs.
      * Expects variability to be implemented via C preprocessor in those lines.

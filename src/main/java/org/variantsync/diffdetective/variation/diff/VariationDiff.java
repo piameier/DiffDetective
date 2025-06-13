@@ -111,7 +111,7 @@ public class VariationDiff<L extends Label> {
         } catch (DiffParseException e) {
             Logger.error("""
                             Could not parse diff:
-                            
+
                             {}
                             """,
                     diff);
@@ -169,7 +169,7 @@ public class VariationDiff<L extends Label> {
             final Path afterFile,
             DiffAlgorithm.SupportedAlgorithm algorithm,
             VariationDiffParseOptions options)
-            throws IOException, DiffParseException 
+            throws IOException, DiffParseException
     {
         try (BufferedReader b = Files.newBufferedReader(beforeFile);
              BufferedReader a = Files.newBufferedReader(afterFile)
@@ -181,13 +181,13 @@ public class VariationDiff<L extends Label> {
     /**
      * Creates a variation diff from to line-based text inputs.
      * This method just forwards to:
-     * @see JGitDiff#diff(String, String, DiffAlgorithm.SupportedAlgorithm, VariationDiffParseOptions) 
+     * @see JGitDiff#diff(String, String, DiffAlgorithm.SupportedAlgorithm, VariationDiffParseOptions)
      */
     public static VariationDiff<DiffLinesLabel> fromLines(
             String before,
             String after,
             DiffAlgorithm.SupportedAlgorithm algorithm,
-            VariationDiffParseOptions options) throws IOException, DiffParseException 
+            VariationDiffParseOptions options) throws IOException, DiffParseException
     {
         return JGitDiff.diff(before, after, algorithm, options);
     }
@@ -196,7 +196,7 @@ public class VariationDiff<L extends Label> {
      * Create a {@link VariationDiff} by matching nodes between {@code before} and {@code after} with the
      * default GumTree matcher.
      *
-     * @see GumTreeDiff#diffUsingMatching(VariationTree, VariationTree)  
+     * @see GumTreeDiff#diffUsingMatching(VariationTree, VariationTree)
      */
     public static <L extends Label> VariationDiff<L> fromTrees(VariationTree<L> before, VariationTree<L> after) {
         return GumTreeDiff.diffUsingMatching(before, after);

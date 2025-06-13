@@ -12,7 +12,7 @@ import graphGeneration as g
 # Add arguments, such as
 #     --patterns_path     path to the patterns file (default: ../lattice/patterns.lg)
 #     --lattice_path      path to the lattice file (default: ../lattice/lattice.lg)
-#     --node_parser       (default|patternsdebug|patternsrelease) 
+#     --node_parser       (default|patternsdebug|patternsrelease)
 #                         how the node labels in the patterns file should be interpreted
 ####################################################################
 
@@ -81,26 +81,26 @@ def patterns(patterns_file_path):
     for line in patternLines:
         line = line.replace("\n", "")
         line = line.replace("\r", "")
-        
+
         if line.startswith("t"):
             # save previous read tree
             if len(nodes):
                 trees.update({tree : (nodes.copy(), edges.copy())})
                 drawCluster(tree, nodes, edges)
-            
+
             # read new tree (and clear all nodes and edges)
             nodes.clear()
             edges.clear()
             # t # TREE_ID
             lineParams = line.split(" ")
             tree = lineParams[2]
-            
+
         # read in node
         elif line.startswith("v"):
             # v ID LABEL
             lineParams = line.split(" ")
             nodes.append((lineParams[1], ' '.join(lineParams[2:])))
-        
+
         # read in edge
         elif line.startswith("e"):
             # e NODE_CHILD_ID NODE_PARENT_ID LABEL
@@ -123,17 +123,17 @@ def lattice(lattice_file_path):
     for line in latticeLines:
         line = line.replace("\n", "")
         line = line.replace("\r", "")
-        
+
         if line.startswith("t"):
             # t # TREE_ID
             pass
-        
+
         elif line.startswith("v"):
             # v ID LABEL
             lineParams = line.split(" ")
             latticeNodes.update({lineParams[1]: lineParams[2]})
 
-            
+
         elif line.startswith("e"):
             # e NODE_CHILD_ID NODE_PARENT_ID LABEL
             lineParams = line.split(" ")
@@ -152,10 +152,10 @@ def main():
     argparser.add_argument('--lattice_path', nargs='?', default="../lattice/lattice.lg", type=str)
     argparser.add_argument('--node_parser', nargs='?', default="patternsrelease", type=str)
     args = argparser.parse_args()
-    
+
     patterns_path = args.patterns_path
     lattice_path = args.lattice_path
-    
+
     # select the node parser
     global NODE_PARSER # accessing the gloabl variable NODE_PARSER
     if args.node_parser == "default":
@@ -170,12 +170,12 @@ def main():
     #d.attr(rankdir='LR')
     d.attr(overlap='false')
     #d.attr(compound='true')
-    
+
     d.attr(sep = "+10")
-    
+
     patterns(patterns_path)
     lattice(lattice_path)
-    
+
     d.view()
 
 

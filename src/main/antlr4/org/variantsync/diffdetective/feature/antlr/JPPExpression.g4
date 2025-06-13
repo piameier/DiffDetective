@@ -109,13 +109,13 @@ IntegerConstant
     :   DecimalConstant IntegerSuffix?
     |   OctalConstant IntegerSuffix?
     |   HexadecimalConstant IntegerSuffix?
-    |	BinaryConstant
+    |   BinaryConstant
     ;
 
 fragment
 BinaryConstant
-	:	'0' [bB] [0-1]+
-	;
+    :   '0' [bB] [0-1]+
+    ;
 
 fragment
 DecimalConstant

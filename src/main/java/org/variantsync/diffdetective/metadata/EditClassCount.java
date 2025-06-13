@@ -117,10 +117,10 @@ public class EditClassCount implements Metadata<EditClassCount> {
         );
         occurrences.get(editClass).increment(commit);
     }
-    
+
     /**
      * Parses lines containing {@link EditClass edit classes} to {@link EditClassCount}.
-     * 
+     *
      * @param lines Lines containing {@link EditClass edit classes} to be parsed
      * @return {@link EditClassCount}
      */
@@ -140,13 +140,13 @@ public class EditClassCount implements Metadata<EditClassCount> {
             innerKeyValuePair = value.split(";");
             total = Integer.parseInt(innerKeyValuePair[0].split("=")[1]); // total count
             commits = Integer.parseInt(innerKeyValuePair[1].split("=")[1]);
-            
+
             // get edit class from key
             final String finalKey = key;
             EditClass editClass = ProposedEditClasses.Instance.fromName(key).orElseThrow(
                     () -> new RuntimeException("Could not find EditClass with name " + finalKey)
             );
-            
+
             Occurrences occurence = new Occurrences();
             occurence.totalAmount = total;
 
@@ -154,11 +154,11 @@ public class EditClassCount implements Metadata<EditClassCount> {
             for (int i = 0; i < commits; ++i) {
                 occurence.uniqueCommits.add(uuid + i);
             }
-            
+
             // add occurrence
             count.occurrences.put(editClass, occurence);
         }
-        
+
         return count;
     }
 

@@ -19,33 +19,33 @@ import java.nio.file.Paths;
  */
 @Disabled
 public class PrintWorkingTreeDiff {
-	
-	@Test
-	public void testWorkingTreeDiff() throws IOException, NoHeadException, GitAPIException {
-		String repoName = "test_repo";
-		
-		// Retrieve repository
-		final String repo_path = "repositories/" + repoName; 
-		final Repository repository = Repository.fromZip(Paths.get(repo_path + ".zip"), repoName); // remove ".zip" when using fromDirectory()
-		repository.setParseOptions(repository.getParseOptions().withDiffStoragePolicy(DiffStoragePolicy.REMEMBER_FULL_DIFF));
-		
-		// Retrieve latest commit
-		// Alternatively, replace with desired RevCommit
-		RevCommit latestCommit = repository.getGitRepo().log().setMaxCount(1).call().iterator().next();
-		
-		// Extract CommitDiff
-		CommitDiffResult commitDiffResult = GitDiffer.createWorkingTreeDiff(repository, latestCommit);
-		CommitDiff commitDiff = commitDiffResult.diff().orElseThrow();
-		
-		// Save diff output
-		String diffOutput = "";
-		for (PatchDiff patchDiff : commitDiff.getPatchDiffs()) {
-			diffOutput += patchDiff.getDiff();
-		}
-		
-		// Check whether diffs match
-		Path fileForVerification = Path.of("src", "test", "resources", repoName + ".txt");
-		TestUtils.assertEqualToFile(fileForVerification, diffOutput);
-		
-	}
+
+    @Test
+    public void testWorkingTreeDiff() throws IOException, NoHeadException, GitAPIException {
+        String repoName = "test_repo";
+
+        // Retrieve repository
+        final String repo_path = "repositories/" + repoName;
+        final Repository repository = Repository.fromZip(Paths.get(repo_path + ".zip"), repoName); // remove ".zip" when using fromDirectory()
+        repository.setParseOptions(repository.getParseOptions().withDiffStoragePolicy(DiffStoragePolicy.REMEMBER_FULL_DIFF));
+
+        // Retrieve latest commit
+        // Alternatively, replace with desired RevCommit
+        RevCommit latestCommit = repository.getGitRepo().log().setMaxCount(1).call().iterator().next();
+
+        // Extract CommitDiff
+        CommitDiffResult commitDiffResult = GitDiffer.createWorkingTreeDiff(repository, latestCommit);
+        CommitDiff commitDiff = commitDiffResult.diff().orElseThrow();
+
+        // Save diff output
+        String diffOutput = "";
+        for (PatchDiff patchDiff : commitDiff.getPatchDiffs()) {
+            diffOutput += patchDiff.getDiff();
+        }
+
+        // Check whether diffs match
+        Path fileForVerification = Path.of("src", "test", "resources", repoName + ".txt");
+        TestUtils.assertEqualToFile(fileForVerification, diffOutput);
+
+    }
 }

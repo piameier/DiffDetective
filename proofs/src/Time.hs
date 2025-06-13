@@ -6,7 +6,7 @@ data DiffType = ADD | REM | NON deriving (Eq, Show)
 always :: [Time]
 always = [BEFORE, AFTER]
 
-abbreviate :: Time -> String 
+abbreviate :: Time -> String
 abbreviate BEFORE = "B"
 abbreviate AFTER = "A"
 
@@ -20,8 +20,8 @@ existsAtTime BEFORE ADD = False
 existsAtTime AFTER REM = False
 existsAtTime _ _ = True
 
-existsBefore :: DiffType -> Bool 
+existsBefore :: DiffType -> Bool
 existsBefore = existsAtTime BEFORE
 
-existsAfter :: DiffType -> Bool 
+existsAfter :: DiffType -> Bool
 existsAfter = existsAtTime AFTER

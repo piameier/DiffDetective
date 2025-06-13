@@ -166,7 +166,7 @@ public class GitDiffer {
 
         return getPatchDiffs(repository, prevTreeIterator, workingTreeIterator, commit, commit);
     }
-    
+
     /**
      * Obtains the CommitDiff between two commit's trees.
      * <p>

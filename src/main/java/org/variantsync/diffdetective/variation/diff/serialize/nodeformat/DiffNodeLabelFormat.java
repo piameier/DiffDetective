@@ -16,16 +16,16 @@ import org.variantsync.functjonal.Pair;
  */
 @FunctionalInterface
 public interface DiffNodeLabelFormat<L extends Label> extends LinegraphFormat {
-	/**
-	 * Converts a label of line graph into a {@link DiffNode}.
-	 * 
-	 * @param lineGraphNodeLabel A string containing the label of the {@link DiffNode}
-	 * @param nodeId The id of the {@link DiffNode}
-	 * @return The corresponding {@link DiffNode}
-	 */
-	default DiffNode<DiffLinesLabel> fromLabelAndId(final String lineGraphNodeLabel, final int nodeId) {
-	    return DiffNode.fromID(nodeId, lineGraphNodeLabel);
-	}
+    /**
+     * Converts a label of line graph into a {@link DiffNode}.
+     *
+     * @param lineGraphNodeLabel A string containing the label of the {@link DiffNode}
+     * @param nodeId The id of the {@link DiffNode}
+     * @return The corresponding {@link DiffNode}
+     */
+    default DiffNode<DiffLinesLabel> fromLabelAndId(final String lineGraphNodeLabel, final int nodeId) {
+        return DiffNode.fromID(nodeId, lineGraphNodeLabel);
+    }
 
     /**
      * Converts a {@link DiffNode} into a label suitable for exporting.

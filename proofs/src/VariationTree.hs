@@ -19,7 +19,7 @@ type WellformednessConstraint l f = VariationTree l f -> Bool
 
 -- getReachableNodes :: VariationTree l f -> VTNode l f -> [VTNode l f]
 -- getReachableNodes tree node =
---     let 
+--     let
 --         childrenMap = getAllChildrenLists tree
 --         childrenOf node = fromMaybe [] (Data.Map.lookup node childrenMap)
 --         in

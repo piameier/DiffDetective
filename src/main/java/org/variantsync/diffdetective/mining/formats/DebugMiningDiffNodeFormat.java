@@ -15,14 +15,14 @@ import java.util.Arrays;
  * Annotation nodes are labeled with DIFFTYPE_NODETYPE (e.g., an added IF node gets the label ADD_IF).
  */
 public class DebugMiningDiffNodeFormat implements MiningNodeFormat {
-	@Override
-	public String toLabel(final DiffNode<? extends DiffLinesLabel> node) {
+    @Override
+    public String toLabel(final DiffNode<? extends DiffLinesLabel> node) {
         if (node.isArtifact()) {
             return ProposedEditClasses.Instance.match(node).getName();
         } else {
             return node.diffType + "_" + node.getNodeType();
         }
-	}
+    }
 
     @Override
     public Pair<DiffType, NodeType> fromEncodedTypes(String tag) {

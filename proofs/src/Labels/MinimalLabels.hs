@@ -17,7 +17,7 @@ instance VTLabel MinimalLabels where
     featuremapping tree node@(VTNode _ label) = case label of
         Artifact _ -> fromJust $ featureMappingOfParent tree node
         Mapping f -> f
-    presencecondition tree node@(VTNode _ label) = case label of 
+    presencecondition tree node@(VTNode _ label) = case label of
         Artifact _ -> parentPC
         Mapping f -> land [f, parentPC]
         where

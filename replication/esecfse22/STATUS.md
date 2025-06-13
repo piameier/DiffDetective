@@ -2,7 +2,7 @@
 ## Overview
 The artifact for the paper _Classifying Edits to Variability in Source Code_ consists of four parts:
 
-1. **DiffDetective**: For our validation, we built DiffDetective, a java library and command-line tool to classify edits to variability in git histories of preprocessor-based software product lines. 
+1. **DiffDetective**: For our validation, we built DiffDetective, a java library and command-line tool to classify edits to variability in git histories of preprocessor-based software product lines.
   DiffDetective is the main artifact used to replicate the validation of our paper (see Section 5).
   DiffDetective is self-contained in that it does not require or depend on in-depth knowledge on the theoretical foundation of our work.
   Practitioners and researches are free to ignore the appendix as well as the haskell formalization and may use DiffDetective out-of-the-box.

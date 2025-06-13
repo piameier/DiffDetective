@@ -16,31 +16,31 @@ import org.tinylog.Logger;
  */
 @FunctionalInterface
 public interface CommitLister {
-	Iterator<RevCommit> listCommits(Repository repository);
+    Iterator<RevCommit> listCommits(Repository repository);
 
-	/**
-	 * List all commits reachable by the current {@code HEAD} of the repository.
-	 */
-	public static final CommitLister TraverseHEAD =
-		(Repository repository) -> {
-			try {
-				return repository.getGitRepo().log().call().iterator();
-			} catch (GitAPIException e) {
-				Logger.warn("Could not get log for git repository {}", repository.getRepositoryName());
-				throw new RuntimeException(e);
-			}
-		};
+    /**
+     * List all commits reachable by the current {@code HEAD} of the repository.
+     */
+    public static final CommitLister TraverseHEAD =
+        (Repository repository) -> {
+            try {
+                return repository.getGitRepo().log().call().iterator();
+            } catch (GitAPIException e) {
+                Logger.warn("Could not get log for git repository {}", repository.getRepositoryName());
+                throw new RuntimeException(e);
+            }
+        };
 
-	/**
-	 * List all commits reachable from all branches of the repository.
-	 */
-	public static final CommitLister AllCommits =
-		(Repository repository) -> {
-			try {
-				return repository.getGitRepo().log().all().call().iterator();
-			} catch (GitAPIException | IOException e) {
-				Logger.warn("Could not get log for git repository {}", repository.getRepositoryName());
-				throw new RuntimeException(e);
-			}
-		};
+    /**
+     * List all commits reachable from all branches of the repository.
+     */
+    public static final CommitLister AllCommits =
+        (Repository repository) -> {
+            try {
+                return repository.getGitRepo().log().all().call().iterator();
+            } catch (GitAPIException | IOException e) {
+                Logger.warn("Could not get log for git repository {}", repository.getRepositoryName());
+                throw new RuntimeException(e);
+            }
+        };
 }

@@ -21,7 +21,7 @@ This replication package consists of four parts:
 ## 1. DiffDetective
 DiffDetective is a java library and command-line tool to parse and classify edits to variability in git histories of preprocessor-based software product lines by creating [variation diffs][difftree_class] and operating on them.
 
-We offer a [Docker](https://www.docker.com/) setup to easily __replicate__ the validation performed in our paper. 
+We offer a [Docker](https://www.docker.com/) setup to easily __replicate__ the validation performed in our paper.
 In the following, we provide a quickstart guide for running the replication.
 You can find detailed information on how to install Docker and build the container in the [INSTALL](INSTALL.md) file, including detailed descriptions of each step and troubleshooting advice.
 
@@ -36,9 +36,9 @@ Start the docker deamon.
 Clone this repository.
 Open a terminal and navigate to the root directory of this repository.
 To build the Docker container you can run the `build` script corresponding to your operating system.
-#### Windows: 
+#### Windows:
 `.\build.bat`
-#### Linux/Mac (bash): 
+#### Linux/Mac (bash):
 `./build.sh`
 
 ### 1.2 Start the replication

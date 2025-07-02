@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.function.FailableBiConsumer;
 import org.apache.commons.lang3.function.FailableBiFunction;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.tinylog.Logger;
 import org.variantsync.diffdetective.analysis.AnalysisResult.ResultKey;
@@ -60,7 +61,7 @@ public class Analysis {
     protected final List<Hooks> hooks;
     protected final Repository repository;
 
-    protected GitDiffer differ;
+    protected Git git;
     protected RevCommit currentCommit;
     protected CommitDiff currentCommitDiff;
     protected PatchDiff currentPatch;
@@ -307,8 +308,6 @@ public class Analysis {
      * @param analysis the analysis to run
      */
     public static AnalysisResult forSingleCommit(final String commitHash, final Analysis analysis) {
-        analysis.differ = new GitDiffer(analysis.getRepository());
-
         final Clock clock = new Clock();
         // prepare tasks
         Logger.info(">>> Running Analysis on single commit {} in {}", commitHash, analysis.getRepository().getRepositoryName());
@@ -316,7 +315,7 @@ public class Analysis {
 
         AnalysisResult result = null;
         try {
-            final RevCommit commit = analysis.differ.getCommit(commitHash);
+            final RevCommit commit = analysis.getRepository().getCommit(commitHash);
             analysis.processCommitBatch(List.of(commit));
             result = analysis.getResult();
         } catch (Exception e) {
@@ -326,8 +325,8 @@ public class Analysis {
 
         final double runtime = clock.getPassedSeconds();
         Logger.info("<<< done in {}", Clock.printPassedSeconds(runtime));
-        
-        result.get(TotalNumberOfCommitsResult.KEY).value++;
+
+        result.get(TotalNumberOfCommitsResult.KEY).value = 1;
 
         exportMetadata(analysis.getOutputDir(), result);
         return result;
@@ -397,7 +396,6 @@ public class Analysis {
         final int nThreads
     ) {
         var analysis = analysisFactory.get();
-        analysis.differ = new GitDiffer(analysis.getRepository());
         analysis.result.append(RuntimeWithMultithreadingResult.KEY, new RuntimeWithMultithreadingResult());
 
         final Clock clock = new Clock();
@@ -409,14 +407,18 @@ public class Analysis {
         final Iterator<Callable<AnalysisResult>> tasks = new MappedIterator<>(
                 /// 1.) Retrieve COMMITS_TO_PROCESS_PER_THREAD commits from the differ and cluster them into one list.
                 new ClusteredIterator<>(
-                        analysis.differ.yieldRevCommitsAfter(numberOfTotalCommits),
+                        analysis.getRepository().getDiffFilter().filter(
+                            new MappedIterator<>(
+                                analysis.getRepository().getCommits(),
+                                numberOfTotalCommits
+                            )
+                        ),
                         commitsToProcessPerThread
                 ),
                 /// 2.) Create a MiningTask for the list of commits. This task will then be processed by one
                 ///     particular thread.
                 commitList -> () -> {
                     Analysis thisThreadsAnalysis = analysisFactory.get();
-                    thisThreadsAnalysis.differ = analysis.differ;
                     thisThreadsAnalysis.processCommitBatch(commitList);
                     return thisThreadsAnalysis.getResult();
                 }
@@ -446,7 +448,7 @@ public class Analysis {
         Logger.info("<<< done in {}", Clock.printPassedSeconds(runtime));
 
         analysis.getResult().get(RuntimeWithMultithreadingResult.KEY).value = runtime;
-//        analysis.getResult().get(TotalNumberOfCommitsResult.KEY).value = numberOfTotalCommits.invocationCount().get();
+        analysis.getResult().get(TotalNumberOfCommitsResult.KEY).value = numberOfTotalCommits.invocationCount().get();
 
         exportMetadata(analysis.getOutputDir(), analysis.getResult());
         return analysis.getResult();
@@ -469,10 +471,10 @@ public class Analysis {
         this.hooks = hooks;
         this.repository = repository;
         this.outputDir = outputDir;
-        
+
         this.result = new AnalysisResult(repository.getRepositoryName());
         this.result.taskName = taskName;
-        
+
         for (var hook : hooks) {
             hook.initializeResults(this);
         }
@@ -519,7 +521,7 @@ public class Analysis {
 
     protected void processCommit() throws Exception {
         // parse the commit
-        final CommitDiffResult commitDiffResult = differ.createCommitDiff(currentCommit);
+        final CommitDiffResult commitDiffResult = GitDiffer.createCommitDiffFromFirstParent(repository, currentCommit);
 
         // report any errors that occurred and exit in case no VariationDiff could be parsed.
         getResult().reportDiffErrors(commitDiffResult.errors());
@@ -559,8 +561,6 @@ public class Analysis {
                 runReverseHook(patchHook, Hooks::endPatch);
             }
         }
-        
-        getResult().get(TotalNumberOfCommitsResult.KEY).value++;
     }
 
     protected void processPatch() throws Exception {

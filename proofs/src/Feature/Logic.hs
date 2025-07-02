@@ -18,7 +18,7 @@ class Composable f where
 
 class Comparable f where
     limplies :: f -> f -> Bool
-    
+
     lequivalent :: f -> f -> Bool
     lequivalent a b = a `limplies` b && b `limplies` a
 

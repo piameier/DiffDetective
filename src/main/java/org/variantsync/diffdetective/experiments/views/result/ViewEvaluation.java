@@ -16,7 +16,7 @@ import static org.variantsync.functjonal.Functjonal.intercalate;
  * @param relevance The relevance predicate from which the views were generated.
  * @param msNaive Milliseconds it took to generate the view with the {@link DiffView#naive(VariationDiff, Relevance) naive algorithm}
  * @param msOptimized Milliseconds it took to generate the view with the {@link DiffView#optimized(VariationDiff, Relevance) optimized algorithm}
- * @param diffStatistics Various statistics on the variation diff of the analysed patch. 
+ * @param diffStatistics Various statistics on the variation diff of the analysed patch.
  * @param viewStatistics The same statistics as for the original variation diff but for the produced view.
  */
 public record ViewEvaluation(

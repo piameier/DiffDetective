@@ -14,7 +14,7 @@ import java.util.function.Predicate;
 
 /**
  * This class groups the implementations for functions that generate views on variation trees,
- * as described in Chapter 3 of our SPLC'23 paper - Views on Edits to Variational Software. 
+ * as described in Chapter 3 of our SPLC'23 paper - Views on Edits to Variational Software.
  */
 public final class TreeView {
     /**

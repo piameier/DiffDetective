@@ -46,7 +46,7 @@ instance VTLabel PaperLabels where
         where
             parentPC = fromJust $ presenceConditionOfParent tree node
             getParent = fromJust . parent tree
-    
+
     wellformednessConstraints = [isTree, allElsesBelowIfs, allMappingsHaveAtMostOneElse]
 
 instance Comparable f => Eq (PaperLabels f) where

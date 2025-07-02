@@ -33,23 +33,6 @@ public class DatasetFactory {
      */
     public static final String PHP = "PHP";
 
-    /**
-     * Default value for diff filters.
-     * It disallows merge commits, only considers patches that modified files,
-     * and only allows source files of C/C++ projects ("h", "hpp", "c", "cpp").
-     */
-    public static final DiffFilter DEFAULT_DIFF_FILTER =
-            new DiffFilter.Builder()
-                    .allowMerge(false)
-                    .allowCommitsWithoutParents(false)
-                    .allowedChangeTypes(DiffEntry.ChangeType.MODIFY)
-                    .allowedFileExtensions("h", "hpp", "c", "cpp")
-                    .build();
-//    public static final DiffFilter PHP_DIFF_FILTER =
-//            new DiffFilter.Builder(DEFAULT_DIFF_FILTER)
-////                    .blockedPaths("ext/fileinfo/data_file.c")
-//                    .build();
-
     private final Path cloneDirectory;
 
     /**
@@ -69,10 +52,7 @@ public class DatasetFactory {
         if (repositoryName.equalsIgnoreCase(MARLIN)) {
             return StanciulescuMarlin.DIFF_FILTER;
         }
-//        if (repositoryName.equalsIgnoreCase(PHP)) {
-//            return PHP_DIFF_FILTER;
-//        }
-        return DEFAULT_DIFF_FILTER;
+        return DiffFilter.DEFAULT_DIFF_FILTER;
     }
 
     /**
@@ -124,7 +104,7 @@ public class DatasetFactory {
         if (preload) {
             Logger.info("Preloading repositories:");
             for (final Repository repo : repos) {
-                repo.getGitRepo().run();
+                repo.preload();
             }
         }
 
@@ -132,7 +112,7 @@ public class DatasetFactory {
             Logger.info("Pulling repositories:");
             for (final Repository repo : repos) {
                 try {
-                    Assert.assertTrue(repo.getGitRepo().run().pull().call().isSuccessful());
+                    Assert.assertTrue(repo.getGitRepo().pull().call().isSuccessful());
                 } catch (GitAPIException e) {
                     Logger.error(e, "Failed to pull repository '{}'", repo.getRepositoryName());
                 }

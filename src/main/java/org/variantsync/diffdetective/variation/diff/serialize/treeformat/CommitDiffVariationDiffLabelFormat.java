@@ -25,7 +25,7 @@ public class CommitDiffVariationDiffLabelFormat implements VariationDiffLabelFor
             Path filePath = Paths.get(commit[0]);
             String commitHash = commit[1];
             return new CommitDiffVariationDiffSource(filePath, commitHash);
-        } catch (InvalidPathException e) { 
+        } catch (InvalidPathException e) {
             throw new RuntimeException("Syntax error. The path cannot be read: " + commit[0]);
         }
     }

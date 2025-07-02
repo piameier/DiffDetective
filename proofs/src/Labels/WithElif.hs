@@ -30,7 +30,7 @@ instance VTLabel WithElif where
             presencecondition tree (getParent (correspondingIf tree node))]
         Elif _ -> land [
             featuremapping tree node,
-            presencecondition tree (getParent (correspondingIf tree node))] 
+            presencecondition tree (getParent (correspondingIf tree node))]
         where
             parentPC = fromJust $ presenceConditionOfParent tree node
             getParent = fromJust . parent tree

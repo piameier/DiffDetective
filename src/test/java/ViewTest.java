@@ -105,10 +105,10 @@ public class ViewTest {
             );
         }
 
-//        showViews(initialVDiff, new VariantQuery(new And(new Literal("X"))));
-//        showViews(initialVDiff, new VariantQuery(new And(new Literal("Y"))));
-//        showViews(initialVDiff, new VariantQuery(new And(negate(new Literal("X")))));
-//        showViews(initialVDiff, new VariantQuery(new And(negate(new Literal("Y")))));
+//        showViews(initialVDiff, new VariantQuery(and(var("X"))));
+//        showViews(initialVDiff, new VariantQuery(and(var("Y"))));
+//        showViews(initialVDiff, new VariantQuery(and(negate(var("X")))));
+//        showViews(initialVDiff, new VariantQuery(and(negate(var("Y")))));
 //        showViews(initialVDiff, new FeatureQuery("X"));
 //        showViews(initialVDiff, new FeatureQuery("Y"));
 //        showViews(initialVDiff, new ArtifactQuery("y"));
@@ -145,7 +145,7 @@ public class ViewTest {
 
         // Figure 3
         final Configure configureExample1 = new Configure(
-                and(featureRing, /* FM = */ negate(new And(featureDoubleLink, featureRing)))
+                and(featureRing, /* FM = */ negate(and(featureDoubleLink, featureRing)))
         );
         GameEngine.showAndAwaitAll(
                 Show.tree(TreeView.tree(b, configureExample1), "Figure 3: view_{tree}(Figure 1, " + configureExample1 + ")")

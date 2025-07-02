@@ -384,7 +384,7 @@ public class ConstructionValidation implements Analysis.Hooks {
                  */
                 new CharacterFilterReader(
                     GitDiffer.getBeforeFullFile(
-                        analysis.getRepository().getGitRepo().run(),
+                        analysis.getRepository(),
                         commit,
                         analysis.getCurrentPatch().getFileName(AFTER)),
                     0xfeff)) // BOM, same as GitDiffer.BOM_PATTERN

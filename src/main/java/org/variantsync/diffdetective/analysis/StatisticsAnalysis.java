@@ -21,7 +21,7 @@ public class StatisticsAnalysis implements Analysis.Hooks {
 
     /**
      * Invariant:
-     * {@link Result#emptyCommits} + {@link Result#failedCommits} + {@link Result#processedCommits} - {@link FilterAnalysis filteredCommits} = {@link Analysis.TotalNumberOfCommitsResult#value}
+     * {@link Result#emptyCommits} + {@link Result#failedCommits} + {@link Result#processedCommits} + {@link org.variantsync.diffdetective.diff.git.GitDiffer filteredCommits} = {@link Analysis.TotalNumberOfCommitsResult#value totalCommits}
      */
     public static final class Result implements Metadata<Result> {
         /**

@@ -11,8 +11,8 @@ import org.variantsync.diffdetective.variation.diff.DiffNode;
  * @author Paul Bittner, Kevin Jedelhauser
  */
 public class MappingsDiffNodeFormat<L extends Label> implements DiffNodeLabelFormat<L> {
-	@Override
-	public String toLabel(final DiffNode<? extends L> node) {
-		return node.diffType + "_" + node.getNodeType() + "_\"" + DiffNodeLabelPrettyfier.prettyPrintIfAnnotationOr(node, "") + "\"";
-	}
+    @Override
+    public String toLabel(final DiffNode<? extends L> node) {
+        return node.diffType + "_" + node.getNodeType() + "_\"" + DiffNodeLabelPrettyfier.prettyPrintIfAnnotationOr(node, "") + "\"";
+    }
 }

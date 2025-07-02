@@ -224,13 +224,13 @@ IntegerConstant
     :   DecimalConstant IntegerSuffix?
     |   OctalConstant IntegerSuffix?
     |   HexadecimalConstant IntegerSuffix?
-    |	BinaryConstant
+    |   BinaryConstant
     ;
 
 fragment
 BinaryConstant
-	:	'0' [bB] [0-1]+
-	;
+    :   '0' [bB] [0-1]+
+    ;
 
 fragment
 DecimalConstant
@@ -420,7 +420,7 @@ SChar
     ;
 
 //MultiLineMacro:
-//	'#' (~[\n]*? '\\' '\r'? '\n')+ ~ [\n]+ -> channel (HIDDEN);
+// '#' (~[\n]*? '\\' '\r'? '\n')+ ~ [\n]+ -> channel (HIDDEN);
 //
 //Directive: '#' ~ [\n]* -> channel (HIDDEN);
 
@@ -442,7 +442,7 @@ Dollar
  */
 AsmBlock
     :   'asm' ~'{'* '{' ~'}'* '}'
-	-> channel(HIDDEN)
+        -> channel(HIDDEN)
     ;
 
 Whitespace

@@ -18,9 +18,9 @@ import java.util.List;
 public class CommitDiff {
     public final static String INVALID_COMMIT_HASH = "none";
 
-	/**
-	 * A list of all {@link PatchDiff PatchDiffs} of a {@link CommitDiff}.
-	 */
+    /**
+     * A list of all {@link PatchDiff PatchDiffs} of a {@link CommitDiff}.
+     */
     private final List<PatchDiff> patchDiffs;
 
     /**
@@ -32,7 +32,7 @@ public class CommitDiff {
      * The hash of the current commit.
      */
     private final String commitHash;
-    
+
     final boolean merge;
 
     /**
@@ -56,7 +56,7 @@ public class CommitDiff {
     /**
      * Add a {@link PatchDiff}.
      * The given diff should belong to the changes between the commits of this CommitDiff.
-     * 
+     *
      * @param patchDiff The {@link PatchDiff PatchDiff} to be added
      */
     public void addPatchDiff(PatchDiff patchDiff){

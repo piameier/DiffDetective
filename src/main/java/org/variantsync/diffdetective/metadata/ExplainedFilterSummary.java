@@ -61,10 +61,10 @@ public class ExplainedFilterSummary implements Metadata<ExplainedFilterSummary> 
                 )
         );
     }
-    
+
     /**
      * Parses lines containing {@link ExplainedFilter.Explanation Explanations} to {@link ExplainedFilterSummary}.
-     * 
+     *
      * @param lines Lines containing {@link ExplainedFilter.Explanation Explanations} to be parsed
      * @return {@link ExplainedFilterSummary}
      */
@@ -78,10 +78,10 @@ public class ExplainedFilterSummary implements Metadata<ExplainedFilterSummary> 
             key = keyValuePair[0];
             key = key.substring(FILTERED_MESSAGE_BEGIN.length(), key.length() - FILTERED_MESSAGE_END.length());
             value = Integer.parseInt(keyValuePair[1]);
-            
+
             // create explanation
             ExplainedFilter.Explanation explanation = new ExplainedFilter.Explanation(value, key);
-            
+
             // add explanation
             summary.explanations.put(key, explanation);
         }

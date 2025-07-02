@@ -7,7 +7,7 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.tinylog.Logger;
-import org.variantsync.diffdetective.error.UncheckedUnParseableFormulaException;
+import org.variantsync.diffdetective.error.UncheckedUnparseableFormulaException;
 
 import java.util.BitSet;
 
@@ -31,7 +31,7 @@ public class ParseErrorListener implements ANTLRErrorListener {
     public void syntaxError(Recognizer<?, ?> recognizer, Object o, int i, int i1, String s, RecognitionException e) {
         Logger.warn("syntax error: {} ; {}", s, e);
         Logger.warn("formula: {}", formula);
-        throw new UncheckedUnParseableFormulaException(s, e);
+        throw new UncheckedUnparseableFormulaException(s, e);
     }
 
     @Override

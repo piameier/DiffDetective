@@ -10,14 +10,14 @@ Start the docker deamon:
 - **On Linux**: Typically, the docker deamon runs automatically. Otherwise, run `sudo systemctl start docker`.
 - **On Windows**: Open the search bar using the 'Windows Key' and search for 'Docker' or 'Docker Desktop'.
 
-More detailed instructions on starting the deamon are given [here](https://docs.docker.com/config/daemon/start/) on the docker website. 
+More detailed instructions on starting the deamon are given [here](https://docs.docker.com/config/daemon/start/) on the docker website.
 
 ### 2. Open a Suitable Terminal
 ```
 # Windows PowerShell:
  - Open the search bar (Default: 'Windows Key') and search for 'PowerShell'
  - Start the PowerShell
- 
+
 # Linux:
  - Press 'ctrl + alt + T' on your keyboard
 ```
@@ -42,9 +42,9 @@ cd replication/splc23-views
 ### 3. Build the Docker Container
 To build the Docker container you can run the `build` script corresponding to your operating system:
 ```
-# Windows: 
+# Windows:
   .\build.bat
-# Linux/Mac (bash): 
+# Linux/Mac (bash):
   ./build.sh
 ```
 
@@ -116,19 +116,19 @@ The input file must have the same format as the other dataset files (i.e., repos
 ## Troubleshooting
 
 ### 'Got permission denied while trying to connect to the Docker daemon socket'
-`Problem:` This is a common problem under Linux, if the user trying to execute Docker commands does not have the permissions to do so. 
+`Problem:` This is a common problem under Linux, if the user trying to execute Docker commands does not have the permissions to do so.
 
 `Fix:` You can fix this problem by either following the [post-installation instructions](https://docs.docker.com/engine/install/linux-postinstall/), or by executing the scripts in the replication package with elevated permissions (i.e., `sudo`).
 
 ### 'Unable to find image 'replication-package:latest' locally'
-`Problem:` The Docker container could not be found. This either means that the name of the container that was built does not fit the name of the container that is being executed (this only happens if you changed the provided scripts), or that the Docker container was not built yet. 
+`Problem:` The Docker container could not be found. This either means that the name of the container that was built does not fit the name of the container that is being executed (this only happens if you changed the provided scripts), or that the Docker container was not built yet.
 
 `Fix:` Follow the instructions described above in the section `Build the Docker Container`.
 
 ### No results after verification, or 'cannot create directory '../results/views/current': Permission denied'
 `Problem:` This problem can occur due to how permissions are managed inside the Docker container. More specifically, it will appear, if Docker is executed with elevated permissions (i.e., `sudo`) and if there is no [results](results) directory because it was deleted manually. In this case, Docker will create the directory with elevated permissions, and the Docker user has no permissions to access the directory.
 
-`Fix:` If there is a _results_ directory, delete it with elevated permission (e.g., `sudo rm -r results`). 
+`Fix:` If there is a _results_ directory, delete it with elevated permission (e.g., `sudo rm -r results`).
 Then, create a new _results_ directory without elevated permissions, or execute `git restore .` to restore the deleted directory.
 
 ### Failed to load class "org.slf4j.impl.StaticLoggerBinder"

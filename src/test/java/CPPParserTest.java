@@ -1,16 +1,30 @@
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.prop4j.Node;
+import org.variantsync.diffdetective.datasets.predefined.MarlinControllingCExpressionVisitor;
 import org.variantsync.diffdetective.error.UnparseableFormulaException;
-import org.variantsync.diffdetective.feature.cpp.CPPDiffLineFormulaExtractor;
+import org.variantsync.diffdetective.feature.Annotation;
+import org.variantsync.diffdetective.feature.AnnotationType;
+import org.variantsync.diffdetective.feature.cpp.CPPAnnotationParser;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.and;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.or;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.var;
+import static org.variantsync.diffdetective.util.fide.FormulaUtils.negate;
 
 public class CPPParserTest {
-    private static record TestCase(String formula, String expected) {
+    private static record TestCase(String formula, Node expectedFormula, AnnotationType expectedType) {
+        public TestCase(String formula, Node expectedFormula) {
+                this(formula, expectedFormula, AnnotationType.If);
+        }
+
+        public Annotation expectedAnnotation() {
+                return new Annotation(expectedType, expectedFormula);
+        }
     }
 
     private static record ThrowingTestCase(String formula) {
@@ -18,110 +32,139 @@ public class CPPParserTest {
 
     private static List<TestCase> testCases() {
         return List.of(
-                new TestCase("#if A", "A"),
-                new TestCase("#ifdef A", "A"),
-                new TestCase("#ifndef A", "!(A)"),
-                new TestCase("#elif A", "A"),
+                // ignored directives
+                new TestCase("ifdef A", null, AnnotationType.None),
+                new TestCase("", null, AnnotationType.None),
+                new TestCase("#", null, AnnotationType.None),
+                new TestCase("#error A", null, AnnotationType.None),
+                new TestCase("#iferror A", null, AnnotationType.None),
 
-                new TestCase("#if !A", "!A"),
-                new TestCase("#if A && B", "A&&B"),
-                new TestCase("#if A || B", "A||B"),
-                new TestCase("#if A && (B || C)", "A&&(B||C)"),
-                new TestCase("#if A && B || C", "A&&B||C"),
+                new TestCase("#if A", var("A")),
+                new TestCase("#ifdef A", var("defined(A)")),
+                new TestCase("#ifndef A", negate(var("defined(A)"))),
+                new TestCase("#elifdef A", var("defined(A)"), AnnotationType.Elif),
+                new TestCase("#elifndef A", negate(var("defined(A)")), AnnotationType.Elif),
+                new TestCase("#elif A", var("A"), AnnotationType.Elif),
+                new TestCase("#else", null, AnnotationType.Else),
+                new TestCase("#endif", null, AnnotationType.Endif),
 
-                new TestCase("#if 1 > -42", "1__GT____U_MINUS__42"),
-                new TestCase("#if 1 > +42", "1__GT____U_PLUS__42"),
-                new TestCase("#if 42 > A", "42__GT__A"),
-                new TestCase("#if 42 > ~A", "42__GT____U_TILDE__A"),
-                new TestCase("#if A + B > 42", "A__ADD__B__GT__42"),
-                new TestCase("#if A << B", "A__LSHIFT__B"),
-                new TestCase("#if A ? B : C", "A__THEN__B__COLON__C"),
-                new TestCase("#if A >= B && C > D", "A__GEQ__B&&C__GT__D"),
-                new TestCase("#if A * (B + C)", "A__MUL____LB__B__ADD__C__RB__"),
-                new TestCase("#if defined(A) && (B * 2) > C", "DEFINED___LB__A__RB__&&__LB__B__MUL__2__RB____GT__C"),
-                new TestCase("#if(STDC == 1) && (defined(LARGE) || defined(COMPACT))", "(STDC__EQ__1)&&(DEFINED___LB__LARGE__RB__||DEFINED___LB__COMPACT__RB__)"),
-                new TestCase("#if (('Z' - 'A') == 25)", "(__LB____SQUOTE__Z__SQUOTE____SUB____SQUOTE__A__SQUOTE____RB____EQ__25)"),
-                new TestCase("#if APR_CHARSET_EBCDIC && !(('Z' - 'A') == 25)", "APR_CHARSET_EBCDIC&&!(__LB____SQUOTE__Z__SQUOTE____SUB____SQUOTE__A__SQUOTE____RB____EQ__25)"),
+                new TestCase("#if !A", negate(var("A"))),
+                new TestCase("#if A && B", and(var("A"), var("B"))),
+                new TestCase("#if A || B", or(var("A"), var("B"))),
+                new TestCase("#if A && (B || C)", and(var("A"), or(var("B"), var("C")))),
+                new TestCase("#if A && B || C", or(and(var("A"), var("B")), var("C"))),
+
+                new TestCase("#if 1 > -42", var("1>-42")),
+                new TestCase("#if 1 > +42", var("1>+42")),
+                new TestCase("#if 42 > A", var("42>A")),
+                new TestCase("#if 42 > ~A", var("42>~A")),
+                new TestCase("#if A + B > 42", var("A+B>42")),
+                new TestCase("#if A << B", var("A<<B")),
+                new TestCase("#if A ? B : C", var("A?B:C")),
+                new TestCase("#if A >= B && C > D", and(var("A>=B"), var("C>D"))),
+                new TestCase("#if A * (B + C)", var("A*(B+C)")),
+                new TestCase("#if defined(A) && (B * 2) > C", and(var("defined(A)"), var("(B*2)>C"))),
+                new TestCase("#if(STDC == 1) && (defined(LARGE) || defined(COMPACT))", and(var("STDC==1"), or(var("defined(LARGE)"), var("defined(COMPACT)")))),
+                new TestCase("#if (('Z' - 'A') == 25)", var("('Z'-'A')==25")),
+                new TestCase("#if APR_CHARSET_EBCDIC && !(('Z' - 'A') == 25)", and(var("APR_CHARSET_EBCDIC"), negate(var("('Z'-'A')==25")))),
                 new TestCase("# if ((GNUTLS_VERSION_MAJOR + (GNUTLS_VERSION_MINOR > 0 || GNUTLS_VERSION_PATCH >= 20)) > 3)",
-                        "(__LB__GNUTLS_VERSION_MAJOR__ADD____LB__GNUTLS_VERSION_MINOR__GT__0__L_OR__GNUTLS_VERSION_PATCH__GEQ__20__RB____RB____GT__3)"),
+                        var("(GNUTLS_VERSION_MAJOR+(GNUTLS_VERSION_MINOR>0||GNUTLS_VERSION_PATCH>=20))>3")),
 
-                new TestCase("#if A && (B > C)", "A&&(B__GT__C)"),
-                new TestCase("#if (A && B) > C", "__LB__A__L_AND__B__RB____GT__C"),
-                new TestCase("#if C == (A || B)", "C__EQ____LB__A__L_OR__B__RB__"),
-                new TestCase("#if ((A && B) > C)", "(__LB__A__L_AND__B__RB____GT__C)"),
-                new TestCase("#if A && ((B + 1) > (C || D))", "A&&(__LB__B__ADD__1__RB____GT____LB__C__L_OR__D__RB__)"),
+                new TestCase("#if A && (B > C)", and(var("A"), var("B>C"))),
+                new TestCase("#if (A && B) > C", var("(A&&B)>C")),
+                new TestCase("#if C == (A || B)", var("C==(A||B)")),
+                new TestCase("#if ((A && B) > C)", var("(A&&B)>C")),
+                new TestCase("#if A && ((B + 1) > (C || D))", and(var("A"), var("(B+1)>(C||D)"))),
 
-                new TestCase("#if __has_include", "HAS_INCLUDE_"),
-                new TestCase("#if defined __has_include", "DEFINED_HAS_INCLUDE_"),
-                new TestCase("#if __has_include(<nss3/nss.h>)", "HAS_INCLUDE___LB____LT__nss3__DIV__nss__DOT__h__GT____RB__"),
-                new TestCase("#if __has_include(<nss.h>)", "HAS_INCLUDE___LB____LT__nss__DOT__h__GT____RB__"),
-                new TestCase("#if __has_include(\"nss3/nss.h\")", "HAS_INCLUDE___LB____QUOTE__nss3__DIV__nss__DOT__h__QUOTE____RB__"),
-                new TestCase("#if __has_include(\"nss.h\")", "HAS_INCLUDE___LB____QUOTE__nss__DOT__h__QUOTE____RB__"),
+                new TestCase("#if __has_include", var("__has_include")),
+                new TestCase("#if defined __has_include", var("defined(__has_include)")),
+                new TestCase("#if __has_include(<nss3/nss.h>)", var("__has_include(<nss3/nss.h>)")),
+                new TestCase("#if __has_include(<nss.h>)", var("__has_include(<nss.h>)")),
+                new TestCase("#if __has_include(\"nss3/nss.h\")", var("__has_include(\"nss3/nss.h\")")),
+                new TestCase("#if __has_include(\"nss.h\")", var("__has_include(\"nss.h\")")),
 
-                new TestCase("#if __has_attribute", "HAS_ATTRIBUTE_"),
-                new TestCase("#if defined __has_attribute", "DEFINED_HAS_ATTRIBUTE_"),
-                new TestCase("#  if __has_attribute (nonnull)", "HAS_ATTRIBUTE___LB__nonnull__RB__"),
-                new TestCase("#if defined __has_attribute && __has_attribute (nonnull)", "DEFINED_HAS_ATTRIBUTE_&&HAS_ATTRIBUTE___LB__nonnull__RB__"),
+                new TestCase("#if __has_attribute", var("__has_attribute")),
+                new TestCase("#if defined __has_attribute", var("defined(__has_attribute)")),
+                new TestCase("#  if __has_attribute (nonnull)", var("__has_attribute(nonnull)")),
+                new TestCase("#if defined __has_attribute && __has_attribute (nonnull)", and(var("defined(__has_attribute)"), var("__has_attribute(nonnull)"))),
 
-                new TestCase("#if __has_cpp_attribute", "HAS_CPP_ATTRIBUTE_"),
-                new TestCase("#if defined __has_cpp_attribute", "DEFINED_HAS_CPP_ATTRIBUTE_"),
-                new TestCase("#if __has_cpp_attribute (nonnull)", "HAS_CPP_ATTRIBUTE___LB__nonnull__RB__"),
-                new TestCase("#if __has_cpp_attribute (nonnull) && A", "HAS_CPP_ATTRIBUTE___LB__nonnull__RB__&&A"),
+                new TestCase("#if __has_cpp_attribute", var("__has_cpp_attribute")),
+                new TestCase("#if defined __has_cpp_attribute", var("defined(__has_cpp_attribute)")),
+                new TestCase("#if __has_cpp_attribute (nonnull)", var("__has_cpp_attribute(nonnull)")),
+                new TestCase("#if __has_cpp_attribute (nonnull) && A", and(var("__has_cpp_attribute(nonnull)"), var("A"))),
 
-                new TestCase("#if defined __has_c_attribute", "DEFINED_HAS_C_ATTRIBUTE_"),
-                new TestCase("#if __has_c_attribute", "HAS_C_ATTRIBUTE_"),
-                new TestCase("#if __has_c_attribute (nonnull)", "HAS_C_ATTRIBUTE___LB__nonnull__RB__"),
-                new TestCase("#if __has_c_attribute (nonnull) && A", "HAS_C_ATTRIBUTE___LB__nonnull__RB__&&A"),
+                new TestCase("#if defined __has_c_attribute", var("defined(__has_c_attribute)")),
+                new TestCase("#if __has_c_attribute", var("__has_c_attribute")),
+                new TestCase("#if __has_c_attribute (nonnull)", var("__has_c_attribute(nonnull)")),
+                new TestCase("#if __has_c_attribute (nonnull) && A", and(var("__has_c_attribute(nonnull)"), var("A"))),
 
-                new TestCase("#if defined __has_builtin", "DEFINED_HAS_BUILTIN_"),
-                new TestCase("#if __has_builtin", "HAS_BUILTIN_"),
-                new TestCase("#if __has_builtin (__nonnull)", "HAS_BUILTIN___LB____nonnull__RB__"),
-                new TestCase("#if __has_builtin (nonnull) && A", "HAS_BUILTIN___LB__nonnull__RB__&&A"),
+                new TestCase("#if defined __has_builtin", var("defined(__has_builtin)")),
+                new TestCase("#if __has_builtin", var("__has_builtin")),
+                new TestCase("#if __has_builtin (__nonnull)", var("__has_builtin(__nonnull)")),
+                new TestCase("#if __has_builtin (nonnull) && A", and(var("__has_builtin(nonnull)"), var("A"))),
 
-                new TestCase("#if A // Comment && B", "A"),
-                new TestCase("#if A /* Comment */ && B", "A&&B"),
-                new TestCase("#if A && B /* Multiline Comment", "A&&B"),
+                new TestCase("#if A // Comment && B", var("A")),
+                new TestCase("#if A /* Comment */ && B", and(var("A"), var("B"))),
+                new TestCase("#if A && B /* Multiline Comment", and(var("A"), var("B"))),
 
-                new TestCase("#if A == B", "A__EQ__B"),
-                new TestCase("#if A == 1", "A__EQ__1"),
+                new TestCase("#if A == B", var("A==B")),
+                new TestCase("#if A == 1", var("A==1")),
 
-                new TestCase("#if defined A", "DEFINED_A"),
-                new TestCase("#if defined(A)", "DEFINED___LB__A__RB__"),
-                new TestCase("#if defined (A)", "DEFINED___LB__A__RB__"),
-                new TestCase("#if defined ( A )", "DEFINED___LB__A__RB__"),
-                new TestCase("#if (defined A)", "(DEFINED_A)"),
-                new TestCase("#if MACRO (A)", "MACRO___LB__A__RB__"),
-                new TestCase("#if MACRO (A, B)", "MACRO___LB__A__B__RB__"),
-                new TestCase("#if MACRO (A, B + C)", "MACRO___LB__A__B__ADD__C__RB__"),
-                new TestCase("#if MACRO (A, B) == 1", "MACRO___LB__A__B__RB____EQ__1"),
+                new TestCase("#if defined A", var("defined(A)")),
+                new TestCase("#if defined(A)", var("defined(A)")),
+                new TestCase("#if defined (A)", var("defined(A)")),
+                new TestCase("#if defined ( A )", var("defined(A)")),
+                new TestCase("#if (defined A)", var("defined(A)")),
+                new TestCase("#if MACRO (A)", var("MACRO(A)")),
+                new TestCase("#if MACRO (A, B)", var("MACRO(A,B)")),
+                new TestCase("#if MACRO (A, B + C)", var("MACRO(A,B+C)")),
+                new TestCase("#if MACRO (A, B) == 1", var("MACRO(A,B)==1")),
 
-                new TestCase("#if ifndef", "ifndef"),
+                new TestCase("#if ifndef", var("ifndef")),
 
-                new TestCase("#if __has_include_next(<some-header.h>)", "__HAS_INCLUDE_NEXT___LB____LT__some__SUB__header__DOT__h__GT____RB__"),
-                new TestCase("#if __is_target_arch(x86)", "__IS_TARGET_ARCH___LB__x86__RB__"),
-                new TestCase("#if A || (defined(NAME) && (NAME >= 199630))", "A||(DEFINED___LB__NAME__RB__&&(NAME__GEQ__199630))"),
-                new TestCase("#if MACRO(part:part)", "MACRO___LB__part__COLON__part__RB__"),
-                new TestCase("#if MACRO(x=1)", "MACRO___LB__x__ASSIGN__1__RB__"),
-                new TestCase("#if A = 3", "A__ASSIGN__3"),
-                new TestCase("#if ' ' == 32", "__SQUOTE_____SQUOTE____EQ__32"),
-                new TestCase("#if (NAME<<1) > (1<<BITS)", "__LB__NAME__LSHIFT__1__RB____GT____LB__1__LSHIFT__BITS__RB__"),
-                new TestCase("#if #cpu(sparc)", "CPU___LB__sparc__RB__"),
-                new TestCase("#ifdef \\U0001000", "__B_SLASH__U0001000"),
-                new TestCase("#if (defined(NAME) && (NAME >= 199905) && (NAME < 1991011)) ||     (NAME >= 300000) || defined(NAME)", "(DEFINED___LB__NAME__RB__&&(NAME__GEQ__199905)&&(NAME__LT__1991011))||(NAME__GEQ__300000)||DEFINED___LB__NAME__RB__"),
-                new TestCase("#if __has_warning(\"-Wa-warning\"_foo)",
-                        "__HAS_WARNING___LB____QUOTE____SUB__Wa__SUB__warning__QUOTE_____foo__RB__")
+                new TestCase("#if __has_include_next(<some-header.h>)", var("__has_include_next(<some-header.h>)")),
+                new TestCase("#if __is_target_arch(x86)", var("__is_target_arch(x86)")),
+                new TestCase("#if A || (defined(NAME) && (NAME >= 199630))", or(var("A"), and(var("defined(NAME)"), var("NAME>=199630")))),
+                new TestCase("#if MACRO(part:part)", var("MACRO(part:part)")),
+                new TestCase("#if MACRO(x=1)", var("MACRO(x=1)")),
+                new TestCase("#if A = 3", var("A=3")),
+                new TestCase("#if ' ' == 32", var("' '==32")),
+                new TestCase("#if (NAME<<1) > (1<<BITS)", var("(NAME<<1)>(1<<BITS)")),
+                new TestCase("#if #cpu(sparc)", var("cpu(sparc)")),
+                new TestCase("#ifdef \\U0001000", var("defined(\\U0001000)")),
+                new TestCase("#if (defined(NAME) && (NAME >= 199905) && (NAME < 1991011)) ||     (NAME >= 300000) || defined(NAME)",
+                        or(and(var("defined(NAME)"), var("NAME>=199905"), var("NAME<1991011")), var("NAME>=300000"), var("defined(NAME)"))),
+                new TestCase("#if __has_warning(\"-Wa-warning\"_foo)", var("__has_warning(\"-Wa-warning\"_foo)")),
+
+                new TestCase("#if A && (B - (C || D))", and(var("A"), var("B-(C||D)"))),
+                new TestCase("#if A == '1'", var("A=='1'"))
+        );
+    }
+
+    private static List<TestCase> nonMarlinTestCases() {
+        return List.of(
+                new TestCase("#if ENABLED(A)", var("ENABLED(A)")),
+                new TestCase("#if DISABLED(A)", var("DISABLED(A)")),
+                new TestCase("#if ENABLED(FEATURE_A) && DISABLED(FEATURE_B)", and(var("ENABLED(FEATURE_A)"), var("DISABLED(FEATURE_B)"))),
+                new TestCase("#if ENABLED(A, B)", var("ENABLED(A,B)")),
+                new TestCase("#if OTHER(A, B)", var("OTHER(A,B)")),
+                new TestCase("#if A", var("A"))
+        );
+    }
+
+    private static List<TestCase> marlinTestCases() {
+        return List.of(
+                new TestCase("#if ENABLED(A)", var("A")),
+                new TestCase("#if DISABLED(A)", negate(var("A"))),
+                new TestCase("#if ENABLED(FEATURE_A) && DISABLED(FEATURE_B)", and(var("FEATURE_A"), negate(var("FEATURE_B")))),
+                new TestCase("#if ENABLED(A, B)", var("ENABLED(A,B)")),
+                new TestCase("#if OTHER(A, B)", var("OTHER(A,B)")),
+                new TestCase("#if A", var("A"))
         );
     }
 
     private static List<ThrowingTestCase> throwingTestCases() {
         return List.of(
-                // Invalid macro
-                new ThrowingTestCase(""),
-                new ThrowingTestCase("#"),
-                new ThrowingTestCase("ifdef A"),
-                new ThrowingTestCase("#error A"),
-                new ThrowingTestCase("#iferror A"),
-
                 // Empty formula
                 new ThrowingTestCase("#ifdef"),
                 new ThrowingTestCase("#ifdef // Comment"),
@@ -129,38 +172,30 @@ public class CPPParserTest {
         );
     }
 
-    private static List<TestCase> wontfixTestCases() {
-        return List.of(
-                new TestCase("#if A == '1'", "A__EQ____TICK__1__TICK__"),
-                new TestCase("#if A && (B - (C || D))", "A&&(B__MINUS__LB__C__LOR__D__RB__)")
+    @ParameterizedTest
+    @MethodSource({"testCases", "nonMarlinTestCases"})
+    public void testCase(TestCase testCase) throws UnparseableFormulaException {
+        assertEquals(
+                testCase.expectedAnnotation(),
+                new CPPAnnotationParser().parseAnnotation(testCase.formula())
         );
     }
 
     @ParameterizedTest
-    @MethodSource("testCases")
-    public void testCase(TestCase testCase) throws UnparseableFormulaException {
+    @MethodSource({"testCases", "marlinTestCases"})
+    public void marlinTestCase(TestCase testCase) throws UnparseableFormulaException {
         assertEquals(
-                testCase.expected,
-                new CPPDiffLineFormulaExtractor().extractFormula(testCase.formula())
+                testCase.expectedAnnotation(),
+                new CPPAnnotationParser(new MarlinControllingCExpressionVisitor()).parseAnnotation(testCase.formula())
         );
     }
+
 
     @ParameterizedTest
     @MethodSource("throwingTestCases")
     public void throwingTestCase(ThrowingTestCase testCase) {
         assertThrows(UnparseableFormulaException.class, () ->
-                new CPPDiffLineFormulaExtractor().extractFormula(testCase.formula)
+                new CPPAnnotationParser().parseAnnotation(testCase.formula)
         );
     }
-
-    @Disabled("WONTFIX")
-    @ParameterizedTest
-    @MethodSource("wontfixTestCases")
-    public void wontfixTestCase(TestCase testCase) throws UnparseableFormulaException {
-        assertEquals(
-                testCase.expected,
-                new CPPDiffLineFormulaExtractor().extractFormula(testCase.formula())
-        );
-    }
-
 }

@@ -1,87 +1,46 @@
 package org.variantsync.diffdetective.variation.tree.view.relevance;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
 
 import org.prop4j.Node;
-import org.prop4j.NodeWriter;
 import org.variantsync.diffdetective.util.Assert;
 import org.variantsync.diffdetective.util.fide.FixTrueFalse;
-import org.variantsync.diffdetective.util.fide.FixTrueFalse.Formula;
 import org.variantsync.diffdetective.variation.NodeType;
 import org.variantsync.diffdetective.variation.tree.VariationNode;
-import org.variantsync.diffdetective.variation.tree.view.relevance.spec.ConfigureSpec;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Consumer;
 
 /**
  * Relevance predicate that generates (partial) variants from variation trees.
  * This relevance predicate is the implementation of Equation 5 in our SPLC'23 paper.
  */
-public class Configure implements Relevance {
-    private final Formula configuration;
+public class ConfigureWithFullConfig implements Relevance {
+    private final Map<Object, Boolean> assignment;
 
-    /**
-     * Same as {@link Configure#Configure(Node)} but with a formula that is witnessed to
-     * not contain true or false constants not at the root.
-     * Workaround for FeatureIDE bug <a href="https://github.com/FeatureIDE/FeatureIDE/issues/1333">FeatureIDE Issue 1333</a>.
-     */
-    public Configure(final Formula configuration) {
-        this.configuration = configuration;
-    }
-
-    /**
-     * Create a configuration relevance from a propositional formula that encodes selections
-     * and deselections of variables.
-     * Typically, the given formula should be in conjunctive normal form.
-     * The given configuration may be partial or complete.
-     * @param configuration A propositional formula that denotes selections and deselections.
-     */
-    public Configure(final Node configuration) {
-        this(FixTrueFalse.EliminateTrueAndFalse(configuration));
-    }
-
-    /**
-     * Create a configuration from an assignment of variable names to boolean values.
-     * The given assignment may be complete or partial.
-     * Internally, a big conjunction of literals is created:
-     * <pre>
-     *           ⋀ f              ∧          ⋀ ¬ f
-     *   (f, true) ∈ assignment    (f, false) ∈ assignment
-     * </pre>
-     *
-     * As an example, suppose the map contains the following entries:
-     * <pre>
-     *   A ↦ true
-     *   B ↦ false
-     *   C ↦ true
-     * </pre>
-     * then we construct a formula A ∧ (¬ B) ∧ C.
-     */
-    public Configure(final Map<String, Boolean> assignment) {
-        // We use commutativity if ∧ to iterate the map only once instead of twice as shown in the formula above.
-        final Formula[] fixedFeatures = new Formula[assignment.size()];
-        int i = 0;
-        for (Entry<String, Boolean> entry : assignment.entrySet()) {
-            fixedFeatures[i] = Formula.var(entry.getKey());
-            if (!entry.getValue()) {
-                fixedFeatures[i] = Formula.not(fixedFeatures[i]);
-            }
-
-            ++i;
+    public ConfigureWithFullConfig(final Map<Object, Boolean> assignment) {
+        this.assignment = assignment;
+        //FIXME: Fix FixTrueFalse TrueNames and FalseNames
+        this.assignment.put("0", false);
+        this.assignment.put("1", true);
+        this.assignment.put("False", false);
+        this.assignment.put("True", true);
+        Map<Object, Boolean> map = new HashMap<>();
+        for (Map.Entry<Object, Boolean> entry : assignment.entrySet()) {
+        	map.put("!" + String.valueOf(entry.getKey()), !entry.getValue());
         }
-
-        this.configuration = Formula.and(fixedFeatures);
+        this.assignment.putAll(map);
     }
 
     @Override
     public boolean test(VariationNode<?, ?> v) {
-        return ConfigureSpec.test(configuration, v);
+    	// Since FeatureIDE falsely reports constants "True" and "False" as feature names, we have to remove them from the resulting set.
+    	try {
+    		return v.getPresenceCondition().getValue(this.assignment);
+    	} catch (Exception e) {
+    		System.out.println(this.assignment);
+    		throw e;
+    	}
     }
 
     private <TreeNode extends VariationNode<TreeNode, ?>> void computeViewNodes(List<TreeNode> vs, Consumer<TreeNode> markRelevant) {
@@ -145,12 +104,12 @@ public class Configure implements Relevance {
     }
 
     @Override
-    public List<Object> getSourceArguments() {
-        return List.of(configuration.get().toString(NodeWriter.logicalSymbols));
+    public String parametersToString() {
+        return assignment.toString();
     }
 
     @Override
-    public String getSourceExplanation() {
+    public String getFunctionName() {
         return "configure";
     }
 

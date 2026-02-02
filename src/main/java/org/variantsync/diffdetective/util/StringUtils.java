@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 /** A collection of useful utilities related to string processing. */
 public class StringUtils {
     /** An operating system independent line break used in almost all internal strings. */
-    public final static String LINEBREAK = "\r\n";
+    public final static String LINEBREAK = "\n";
     /** A regex to identify line breaks of any operating system .*/
     public final static Pattern LINEBREAK_REGEX = Pattern.compile("\\r\\n|\\r|\\n");
 
@@ -48,7 +48,7 @@ public class StringUtils {
     public static String clamp(int maxlen, String s) {
         return s.substring(0, Math.min(s.length(), maxlen));
     }
-
+    
     /**
      * @return the longest prefix of the given string that contains only of whitespace
      */
